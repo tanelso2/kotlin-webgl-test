@@ -1,44 +1,41 @@
 import com.tanelso2.glmatrix.Mat4
 import com.tanelso2.glmatrix.Vec3
-import com.tanelso2.glmatrix.mat4
 import org.khronos.webgl.*
 import org.khronos.webgl.WebGLRenderingContext as GL
 import org.w3c.dom.HTMLCanvasElement
-import org.w3c.dom.HTMLElement
 import kotlin.browser.document
 import kotlin.browser.window
 
-class HTMLElements {
-    val container: HTMLElement = document.createElement("div") as HTMLElement
-    val canvas: HTMLCanvasElement = document.createElement("canvas") as HTMLCanvasElement
-    var webgl: GL
+class WebGLWrapper {
+    val canvas: HTMLCanvasElement = document.getElementById("webglCanvas") as HTMLCanvasElement
+    val webgl: GL = canvas.getContext("webgl") as GL
+    val shaderProgram: WebGLProgram = webgl.createProgram() ?: throw IllegalStateException("Could not initialize shader program")
 
     val windowWidth = 800
     val windowHeight = 600
 
-    var counter = 0
-
     val p: List<Point> = listOf(
-            Point(-0.8f, 0.8f, 0.0f),
-            Point(-0.2f, 0.8f, 0.0f),
-            Point(0.2f, 0.8f, 0.0f),
-            Point(0.8f, 0.8f, 0.0f),
-            Point(-0.8f, 0.6f, 0.0f),
-            Point(-0.2f, 0.6f, 0.0f),
-            Point(0.2f, 0.6f, 0.0f),
-            Point(0.8f, 0.6f, 0.0f),
+            Point(-0.8, 0.8, 0.0),
+            Point(-0.2, 0.8, 0.0),
+            Point(0.2, 0.8, 0.0),
+            Point(0.8, 0.8, 0.0),
+            Point(-0.8, 0.6, 0.0),
+            Point(-0.2, 0.6, 0.0),
+            Point(0.2, 0.6, 0.0),
+            Point(0.8, 0.6, 0.0),
 
-            Point(-0.8f, -0.6f, 0.0f),
-            Point(-0.2f, -0.6f, 0.0f),
-            Point(0.2f, -0.6f, 0.0f),
-            Point(0.8f, -0.6f, 0.0f),
-            Point(-0.8f, -0.8f, 0.0f),
-            Point(-0.2f, -0.8f, 0.0f),
-            Point(0.2f, -0.8f, 0.0f),
-            Point(0.8f, -0.8f, 0.0f)
+            Point(-0.8, -0.6, 0.0),
+            Point(-0.2, -0.6, 0.0),
+            Point(0.2, -0.6, 0.0),
+            Point(0.8, -0.6, 0.0),
+            Point(-0.8, -0.8, 0.0),
+            Point(-0.2, -0.8, 0.0),
+            Point(0.2, -0.8, 0.0),
+            Point(0.8, -0.8, 0.0)
     )
 
     val trianglesArray: List<Point> = listOf(
+            //top
             p[0], p[4], p[1],
             p[1], p[4], p[5],
             p[1], p[5], p[2],
@@ -60,46 +57,64 @@ class HTMLElements {
     )
 
     val vertexList: List<Float> = trianglesArray.flatMap { listOf(it.x, it.y, it.z) }
-    val colorList: List<Float> = trianglesArray.flatMap { it.color }
-    val shaderProgram: WebGLProgram
+    val colorList: List<Float> = trianglesArray.flatMap { it.color.list() }
 
-    init {
-        container.setAttribute("style", "position: relative")
-        canvas.setAttribute("style", "position: absolute; left: 0px; top: 0px; z-index: 10; width: ${windowWidth}px; height: ${windowHeight}px")
-        document.body?.appendChild(container)
-        container.appendChild(canvas)
+    val resourceList = arrayOf(
+            "frag-shader.txt",
+            "vertex-shader.txt"
+    )
 
+    val resourceLoader = ResourceLoader(*resourceList)
 
-        webgl = canvas.getContext("webgl") as GL
-        webgl.viewport(0, 0, canvas.width, canvas.height)
+    fun setup() {
+        if(resourceLoader.allLoaded()) {
+            val vertexShaderSource = resourceLoader.get("vertex-shader.txt") ?: ""
+            val vertexShader = getVertexShader(vertexShaderSource)
+            val fragmentShaderSource = resourceLoader.get("frag-shader.txt") ?: ""
+            val fragmentShader = getFragmentShader(fragmentShaderSource)
+            webgl.attachShader(shaderProgram, vertexShader)
+            webgl.attachShader(shaderProgram, fragmentShader)
+            webgl.linkProgram(shaderProgram)
+            webgl.useProgram(shaderProgram)
 
-        shaderProgram = webgl.createProgram() ?: throw IllegalStateException("Could not initialize shader program")
-        val vertexShader = getVertexShader(webgl)
-        val fragmentShader = getFragmentShader(webgl)
-        webgl.attachShader(shaderProgram, vertexShader)
-        webgl.attachShader(shaderProgram, fragmentShader)
-        webgl.linkProgram(shaderProgram)
-        webgl.useProgram(shaderProgram)
+            val vertexPositionAttribute = webgl.getAttribLocation(shaderProgram, "aVertexPosition")
+            webgl.enableVertexAttribArray(vertexPositionAttribute)
+            val vertexPositionBuffer = webgl.createBuffer()
+            webgl.bindBuffer(GL.ARRAY_BUFFER, vertexPositionBuffer)
+            val vertexArray = vertexList.toTypedArray()
+            webgl.bufferData(GL.ARRAY_BUFFER, Float32Array(vertexArray), GL.STATIC_DRAW)
+            webgl.vertexAttribPointer(vertexPositionAttribute, 3, GL.FLOAT, false, 0, 0)
 
-        val vertexPositionAttribute = webgl.getAttribLocation(shaderProgram, "aVertexPosition")
-        webgl.enableVertexAttribArray(vertexPositionAttribute)
-        val vertexPositionBuffer = webgl.createBuffer()
-        webgl.bindBuffer(GL.ARRAY_BUFFER, vertexPositionBuffer)
-        val vertexArray = vertexList.toTypedArray()
-        webgl.bufferData(GL.ARRAY_BUFFER, Float32Array(vertexArray), GL.STATIC_DRAW)
-        webgl.vertexAttribPointer(vertexPositionAttribute, 3, GL.FLOAT, false, 0, 0)
+            val vertexColorAttribute = webgl.getAttribLocation(shaderProgram, "aVertexColor")
+            webgl.enableVertexAttribArray(vertexColorAttribute)
+            val vertexColorBuffer = webgl.createBuffer()
+            webgl.bindBuffer(GL.ARRAY_BUFFER, vertexColorBuffer)
+            val colorArray = colorList.toTypedArray()
+            webgl.bufferData(GL.ARRAY_BUFFER, Float32Array(colorArray), GL.STATIC_DRAW)
+            webgl.vertexAttribPointer(vertexColorAttribute, 4, GL.FLOAT, false, 0, 0)
 
-        val vertexColorAttribute = webgl.getAttribLocation(shaderProgram, "aVertexColor")
-        webgl.enableVertexAttribArray(vertexColorAttribute)
-        val vertexColorBuffer = webgl.createBuffer()
-        webgl.bindBuffer(GL.ARRAY_BUFFER, vertexColorBuffer)
-        val colorArray = colorList.toTypedArray()
-        webgl.bufferData(GL.ARRAY_BUFFER, Float32Array(colorArray), GL.STATIC_DRAW)
-        webgl.vertexAttribPointer(vertexColorAttribute, 4, GL.FLOAT, false, 0, 0)
+            window.requestAnimationFrame { render() }
+        } else {
+            //enable javascript to context switch and finish our requests
+            window.requestAnimationFrame { setup() }
+        }
     }
 
     var rotZ = 2 * Math.PI
     var transZ = 2 * Math.PI
+
+    fun getFragmentShader(source: String): WebGLShader = getShader(source, GL.FRAGMENT_SHADER)
+    fun getVertexShader(source: String): WebGLShader = getShader(source, GL.VERTEX_SHADER)
+
+
+    private fun getShader(shaderSource: String, shaderType: Int): WebGLShader {
+        val shader = webgl.createShader(shaderType)
+        webgl.shaderSource(shader, shaderSource)
+        webgl.compileShader(shader)
+        println(webgl.getShaderInfoLog(shader))
+        return shader ?: throw IllegalStateException("Shader is null!")
+    }
+
     fun draw() {
         rotZ -= 0.02
         transZ += 0.02
@@ -120,7 +135,6 @@ class HTMLElements {
         val mvMatrixUniform = webgl.getUniformLocation(shaderProgram, "uMVMatrix")
         webgl.uniformMatrix4fv(mvMatrixUniform, false, finalMatrix.array)
         webgl.drawArrays(GL.TRIANGLES, 0, trianglesArray.size)
-
     }
 
     fun render() {
@@ -131,17 +145,31 @@ class HTMLElements {
     }
 }
 
-data class Point(val x: Float, val y: Float, val z: Float) {
-    val color: List<Float> = listOf(
-            Math.random().toFloat(),
-            Math.random().toFloat(),
-            Math.random().toFloat(),
-            1f
-    )
+data class Point(val x: Float, val y: Float, val z: Float, val color: Color) {
+    constructor(x: Float, y: Float, z: Float):
+            this(x, y, z, Color.randomColor())
+    constructor(x: Int, y: Int, z: Int):
+            this(x.toFloat(), y.toFloat(), z.toFloat())
+    constructor(x: Double, y: Double, z: Double):
+            this(x.toFloat(), y.toFloat(), z.toFloat())
+
+    data class Color(val r: Float, val g: Float, val b: Float, val a: Float) {
+        companion object {
+            fun randomColor() = Color(
+                    Math.random().toFloat(),
+                    Math.random().toFloat(),
+                    Math.random().toFloat(),
+                    1f
+            )
+        }
+
+        fun list() = listOf(r, g, b, a)
+    }
 }
 
 fun main(args: Array<String>) {
-    val html = HTMLElements()
-    html.webgl.clearColor(0f, 0f, 0f, 1f)
-    window.requestAnimationFrame { html.render() }
+    document.body?.onload = {
+        val html = WebGLWrapper()
+        window.requestAnimationFrame { html.setup() }
+    }
 }

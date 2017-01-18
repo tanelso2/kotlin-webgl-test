@@ -28,7 +28,7 @@ class Mat4(val array: Float32Array) {
 }
 
 
-@native open class mat4 {
+external open class mat4 {
     companion object {
         fun create(): Float32Array = noImpl
         fun clone(a: Float32Array): Float32Array = noImpl
