@@ -14,6 +14,10 @@ class WebGLWrapper {
     val webgl: GL = canvas.getContext("webgl") as GL
     val shaderProgram: WebGLProgram = webgl.createProgram() ?: throw IllegalStateException("Could not initialize shader program")
 
+    init {
+        webgl.enable(GL.DEPTH_TEST)
+    }
+
     val windowWidth = 800
     val windowHeight = 600
 
@@ -64,13 +68,15 @@ class WebGLWrapper {
 
     private val vertexShaderLocation = "vertex-shader.glsl"
     private val fragmentShaderLocation = "frag-shader.glsl"
+    private val objFileLocation = "teapot.obj"
     val resourceList = arrayOf(
             fragmentShaderLocation,
-            vertexShaderLocation
+            vertexShaderLocation,
+            objFileLocation
     )
 
     val resourceLoader = ResourceLoader(*resourceList)
-
+    val objFileLoader: ObjLoader by lazy { ObjLoader(resourceLoader.get(objFileLocation)!!) }
 
     fun setup() {
         if(resourceLoader.allLoaded()) {
@@ -87,16 +93,16 @@ class WebGLWrapper {
             webgl.enableVertexAttribArray(vertexPositionAttribute)
             val vertexPositionBuffer = webgl.createBuffer()
             webgl.bindBuffer(GL.ARRAY_BUFFER, vertexPositionBuffer)
-            val vertexArray = vertexList.toTypedArray()
-            webgl.bufferData(GL.ARRAY_BUFFER, Float32Array(vertexArray), GL.STATIC_DRAW)
+            val vertexArray = objFileLoader.getVertices()
+            webgl.bufferData(GL.ARRAY_BUFFER, vertexArray, GL.STATIC_DRAW)
             webgl.vertexAttribPointer(vertexPositionAttribute, 3, GL.FLOAT, false, 0, 0)
 
             val vertexColorAttribute = webgl.getAttribLocation(shaderProgram, "aVertexColor")
             webgl.enableVertexAttribArray(vertexColorAttribute)
             val vertexColorBuffer = webgl.createBuffer()
             webgl.bindBuffer(GL.ARRAY_BUFFER, vertexColorBuffer)
-            val colorArray = colorList.toTypedArray()
-            webgl.bufferData(GL.ARRAY_BUFFER, Float32Array(colorArray), GL.STATIC_DRAW)
+            val colorArray = objFileLoader.getColors()
+            webgl.bufferData(GL.ARRAY_BUFFER, colorArray, GL.STATIC_DRAW)
             webgl.vertexAttribPointer(vertexColorAttribute, 4, GL.FLOAT, false, 0, 0)
 
             window.requestAnimationFrame { render() }
@@ -117,7 +123,9 @@ class WebGLWrapper {
         val shader = webgl.createShader(shaderType)
         webgl.shaderSource(shader, shaderSource)
         webgl.compileShader(shader)
-        println(webgl.getShaderInfoLog(shader))
+        if(!(webgl.getShaderParameter(shader, GL.COMPILE_STATUS) as Boolean)) {
+            println(webgl.getShaderInfoLog(shader))
+        }
         return shader ?: throw IllegalStateException("Shader is null!")
     }
 
@@ -130,17 +138,17 @@ class WebGLWrapper {
         val mvMatrix = Mat4()
         mvMatrix.translate(Vec3(transX, transY, transZ))
         mvMatrix.scale(Vec3(1f, 1f, 1f))
-        mvMatrix.rotateX(0f)
-        mvMatrix.rotateY(0f)
-        mvMatrix.rotateZ(rotZ.toFloat())
+        mvMatrix.rotateX(rotZ)
+        mvMatrix.rotateY(0)
+        mvMatrix.rotateZ(0)
         val translateMatrix = Mat4()
-        translateMatrix.translate(Vec3(0f, 0f, -1.5f))
+        translateMatrix.translate(Vec3(0f, 0f, -5.5f))
         val perspectiveMatrix = Mat4()
         perspectiveMatrix.perspective(1, (Math.PI / 2).toFloat(), 0.5f, 100f)
         val finalMatrix = perspectiveMatrix.multiply(translateMatrix).multiply(mvMatrix)
         val mvMatrixUniform = webgl.getUniformLocation(shaderProgram, "uMVMatrix")
         webgl.uniformMatrix4fv(mvMatrixUniform, false, finalMatrix.array)
-        webgl.drawArrays(GL.TRIANGLES, 0, trianglesArray.size)
+        webgl.drawArrays(GL.TRIANGLES, 0, objFileLoader.getNumPoints())
     }
 
     fun render() {

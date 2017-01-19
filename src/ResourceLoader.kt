@@ -25,6 +25,10 @@ class ResourceLoader(vararg resourceLocations: String) {
                     resourceMap[uri]?.value = text as String
                     return@then null //to please the compiler
                 }
+                .catch {e ->
+                    println("Getting $uri failed with $e. Trying again")
+                    makeRequest(uri)
+                }
     }
 
     fun get(name: String): String? {

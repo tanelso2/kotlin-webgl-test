@@ -5,19 +5,11 @@ var WebGL = function (_, Kotlin) {
   'use strict';
   var IllegalStateException = Kotlin.kotlin.IllegalStateException;
   var listOf = Kotlin.kotlin.collections.listOf_9mqe4v$;
+  var lazy = Kotlin.kotlin.lazy_un3fny$;
+  var ArrayList_init = Kotlin.kotlin.collections.ArrayList_init_za3lpa$;
+  var split = Kotlin.kotlin.text.split_rhc0qh$;
+  var startsWith = Kotlin.kotlin.text.startsWith_cjsvxq$;
   var HashMap_init = Kotlin.kotlin.collections.HashMap_init;
-  function insertElem() {
-    var tmp$, tmp$_0;
-    Kotlin.println('Inside insertElem()');
-    tmp$_0 = Kotlin.isType(tmp$ = document.getElementById('kotlinhook'), HTMLElement) ? tmp$ : null;
-    if (tmp$_0 == null) {
-      throw new IllegalStateException('kotlinhook element not present');
-    }
-    var hookElem = tmp$_0;
-    var node = document.createElement('h1');
-    node.textContent = 'Hello again!';
-    hookElem.appendChild(node);
-  }
   function WebGLWrapper() {
     var tmp$, tmp$_0, tmp$_1;
     this.canvas = Kotlin.isType(tmp$ = document.getElementById('webglCanvas'), HTMLCanvasElement) ? tmp$ : Kotlin.throwCCE();
@@ -27,6 +19,7 @@ var WebGL = function (_, Kotlin) {
       throw new IllegalStateException('Could not initialize shader program');
     }
     this.shaderProgram = tmp$_1;
+    this.webgl.enable(WebGLRenderingContext.DEPTH_TEST);
     this.windowWidth = 800;
     this.windowHeight = 600;
     this.p = listOf([Point_init(-0.8, 0.8, 0.0), Point_init(-0.2, 0.8, 0.0), Point_init(0.2, 0.8, 0.0), Point_init(0.8, 0.8, 0.0), Point_init(-0.8, 0.6, 0.0), Point_init(-0.2, 0.6, 0.0), Point_init(0.2, 0.6, 0.0), Point_init(0.8, 0.6, 0.0), Point_init(-0.8, -0.6, 0.0), Point_init(-0.2, -0.6, 0.0), Point_init(0.2, -0.6, 0.0), Point_init(0.8, -0.6, 0.0), Point_init(-0.8, -0.8, 0.0), Point_init(-0.2, -0.8, 0.0), Point_init(0.2, -0.8, 0.0), Point_init(0.8, -0.8, 0.0)]);
@@ -51,11 +44,22 @@ var WebGL = function (_, Kotlin) {
       Kotlin.kotlin.collections.addAll_fwwv5a$(destination_0, list_0);
     }
     this.colorList = destination_0;
-    this.resourceList = ['frag-shader.txt', 'vertex-shader.txt'];
+    this.vertexShaderLocation_0 = 'vertex-shader.glsl';
+    this.fragmentShaderLocation_0 = 'frag-shader.glsl';
+    this.objFileLocation_0 = 'teapot.obj';
+    this.resourceList = [this.fragmentShaderLocation_0, this.vertexShaderLocation_0, this.objFileLocation_0];
     this.resourceLoader = new ResourceLoader(this.resourceList.slice());
+    this.objFileLoader$delegate = lazy(WebGLWrapper$objFileLoader$lambda(this));
     this.rotZ = 2 * Math.PI;
     this.transZ = 2 * Math.PI;
   }
+  Object.defineProperty(WebGLWrapper.prototype, 'objFileLoader', {
+    get: function () {
+      var $receiver = this.objFileLoader$delegate;
+      new Kotlin.PropertyMetadata('objFileLoader');
+      return $receiver.value;
+    }
+  });
   function WebGLWrapper$setup$lambda(this$WebGLWrapper) {
     return function (it) {
       this$WebGLWrapper.render();
@@ -69,10 +73,10 @@ var WebGL = function (_, Kotlin) {
   WebGLWrapper.prototype.setup = function () {
     var tmp$, tmp$_0;
     if (this.resourceLoader.allLoaded()) {
-      var vertexShaderSource_0 = (tmp$ = this.resourceLoader.get_61zpoe$('vertex-shader.txt')) != null ? tmp$ : '';
-      var vertexShader = this.getVertexShader_61zpoe$(vertexShaderSource_0);
-      var fragmentShaderSource_0 = (tmp$_0 = this.resourceLoader.get_61zpoe$('frag-shader.txt')) != null ? tmp$_0 : '';
-      var fragmentShader = this.getFragmentShader_61zpoe$(fragmentShaderSource_0);
+      var vertexShaderSource = (tmp$ = this.resourceLoader.get_61zpoe$(this.vertexShaderLocation_0)) != null ? tmp$ : Kotlin.throwNPE();
+      var vertexShader = this.getVertexShader_61zpoe$(vertexShaderSource);
+      var fragmentShaderSource = (tmp$_0 = this.resourceLoader.get_61zpoe$(this.fragmentShaderLocation_0)) != null ? tmp$_0 : Kotlin.throwNPE();
+      var fragmentShader = this.getFragmentShader_61zpoe$(fragmentShaderSource);
       this.webgl.attachShader(this.shaderProgram, vertexShader);
       this.webgl.attachShader(this.shaderProgram, fragmentShader);
       this.webgl.linkProgram(this.shaderProgram);
@@ -81,17 +85,15 @@ var WebGL = function (_, Kotlin) {
       this.webgl.enableVertexAttribArray(vertexPositionAttribute);
       var vertexPositionBuffer = this.webgl.createBuffer();
       this.webgl.bindBuffer(WebGLRenderingContext.ARRAY_BUFFER, vertexPositionBuffer);
-      var $receiver = this.vertexList;
-      var vertexArray = Kotlin.kotlin.collections.copyToArray($receiver);
-      this.webgl.bufferData(WebGLRenderingContext.ARRAY_BUFFER, new Float32Array(vertexArray), WebGLRenderingContext.STATIC_DRAW);
+      var vertexArray = this.objFileLoader.getVertices();
+      this.webgl.bufferData(WebGLRenderingContext.ARRAY_BUFFER, vertexArray, WebGLRenderingContext.STATIC_DRAW);
       this.webgl.vertexAttribPointer(vertexPositionAttribute, 3, WebGLRenderingContext.FLOAT, false, 0, 0);
       var vertexColorAttribute = this.webgl.getAttribLocation(this.shaderProgram, 'aVertexColor');
       this.webgl.enableVertexAttribArray(vertexColorAttribute);
       var vertexColorBuffer = this.webgl.createBuffer();
       this.webgl.bindBuffer(WebGLRenderingContext.ARRAY_BUFFER, vertexColorBuffer);
-      var $receiver_0 = this.colorList;
-      var colorArray = Kotlin.kotlin.collections.copyToArray($receiver_0);
-      this.webgl.bufferData(WebGLRenderingContext.ARRAY_BUFFER, new Float32Array(colorArray), WebGLRenderingContext.STATIC_DRAW);
+      var colorArray = this.objFileLoader.getColors();
+      this.webgl.bufferData(WebGLRenderingContext.ARRAY_BUFFER, colorArray, WebGLRenderingContext.STATIC_DRAW);
       this.webgl.vertexAttribPointer(vertexColorAttribute, 4, WebGLRenderingContext.FLOAT, false, 0, 0);
       window.requestAnimationFrame(WebGLWrapper$setup$lambda(this));
     }
@@ -106,10 +108,13 @@ var WebGL = function (_, Kotlin) {
     return this.getShader_0(source, WebGLRenderingContext.VERTEX_SHADER);
   };
   WebGLWrapper.prototype.getShader_0 = function (shaderSource, shaderType) {
+    var tmp$;
     var shader = this.webgl.createShader(shaderType);
     this.webgl.shaderSource(shader, shaderSource);
     this.webgl.compileShader(shader);
-    Kotlin.println(this.webgl.getShaderInfoLog(shader));
+    if (!(typeof (tmp$ = this.webgl.getShaderParameter(shader, WebGLRenderingContext.COMPILE_STATUS)) === 'boolean' ? tmp$ : Kotlin.throwCCE())) {
+      Kotlin.println(this.webgl.getShaderInfoLog(shader));
+    }
     if (shader == null) {
       throw new IllegalStateException('Shader is null!');
     }
@@ -124,17 +129,17 @@ var WebGL = function (_, Kotlin) {
     var mvMatrix = Mat4_init();
     mvMatrix.translate_k6echg$(Vec3_init(transX, transY, transZ));
     mvMatrix.scale_k6echg$(Vec3_init(1.0, 1.0, 1.0));
-    mvMatrix.rotateX_mx4ult$(0.0);
-    mvMatrix.rotateY_mx4ult$(0.0);
-    mvMatrix.rotateZ_mx4ult$(this.rotZ);
+    mvMatrix.rotateX_3p81yu$(this.rotZ);
+    mvMatrix.rotateY_3p81yu$(0);
+    mvMatrix.rotateZ_3p81yu$(0);
     var translateMatrix = Mat4_init();
-    translateMatrix.translate_k6echg$(Vec3_init(0.0, 0.0, -1.5));
+    translateMatrix.translate_k6echg$(Vec3_init(0.0, 0.0, -5.5));
     var perspectiveMatrix = Mat4_init();
-    perspectiveMatrix.perspective_7b5o5w$(1.0, Math.PI / 2, 0.5, 100.0);
+    perspectiveMatrix.perspective_1ugm5o$(1, Math.PI / 2, 0.5, 100.0);
     var finalMatrix = perspectiveMatrix.multiply_k68j1l$(translateMatrix).multiply_k68j1l$(mvMatrix);
     var mvMatrixUniform = this.webgl.getUniformLocation(this.shaderProgram, 'uMVMatrix');
     this.webgl.uniformMatrix4fv(mvMatrixUniform, false, finalMatrix.array);
-    this.webgl.drawArrays(WebGLRenderingContext.TRIANGLES, 0, this.trianglesArray.size);
+    this.webgl.drawArrays(WebGLRenderingContext.TRIANGLES, 0, this.objFileLoader.getNumPoints());
   };
   function WebGLWrapper$render$lambda(this$WebGLWrapper) {
     return function (it) {
@@ -147,6 +152,12 @@ var WebGL = function (_, Kotlin) {
     this.draw();
     window.requestAnimationFrame(WebGLWrapper$render$lambda(this));
   };
+  function WebGLWrapper$objFileLoader$lambda(this$WebGLWrapper) {
+    return function () {
+      var tmp$;
+      return new ObjLoader((tmp$ = this$WebGLWrapper.resourceLoader.get_61zpoe$(this$WebGLWrapper.objFileLocation_0)) != null ? tmp$ : Kotlin.throwNPE());
+    };
+  }
   WebGLWrapper.$metadata$ = {
     type: Kotlin.TYPE.CLASS,
     classIndex: Kotlin.newClassIndex(),
@@ -170,7 +181,7 @@ var WebGL = function (_, Kotlin) {
     Point$Color$Companion_instance = this;
   }
   Point$Color$Companion.prototype.randomColor = function () {
-    return new Point$Color(Math.random(), Math.random(), Math.random(), 1.0);
+    return Point$Point$Color_init(Math.random(), Math.random(), Math.random(), 1.0);
   };
   Point$Color$Companion.$metadata$ = {
     type: Kotlin.TYPE.OBJECT,
@@ -207,7 +218,7 @@ var WebGL = function (_, Kotlin) {
     return this.a;
   };
   Point$Color.prototype.copy_7b5o5w$ = function (r, g, b, a) {
-    return new Point$Color(r === void 0 ? this.r : r, g === void 0 ? this.g : g, b === void 0 ? this.b : b, a === void 0 ? this.a : a);
+    return new Point$Point$Color_init(r === void 0 ? this.r : r, g === void 0 ? this.g : g, b === void 0 ? this.b : b, a === void 0 ? this.a : a);
   };
   Point$Color.prototype.toString = function () {
     return 'Color(r=' + Kotlin.toString(this.r) + (', g=' + Kotlin.toString(this.g)) + (', b=' + Kotlin.toString(this.b)) + (', a=' + Kotlin.toString(this.a)) + ')';
@@ -242,7 +253,7 @@ var WebGL = function (_, Kotlin) {
     return this.color;
   };
   Point.prototype.copy_kb9oe0$ = function (x, y, z, color) {
-    return new Point_init_0(x === void 0 ? this.x : x, y === void 0 ? this.y : y, z === void 0 ? this.z : z, color === void 0 ? this.color : color);
+    return new Point_init(x === void 0 ? this.x : x, y === void 0 ? this.y : y, z === void 0 ? this.z : z, color === void 0 ? this.color : color);
   };
   Point.prototype.toString = function () {
     return 'Point(x=' + Kotlin.toString(this.x) + (', y=' + Kotlin.toString(this.y)) + (', z=' + Kotlin.toString(this.z)) + (', color=' + Kotlin.toString(this.color)) + ')';
@@ -271,6 +282,231 @@ var WebGL = function (_, Kotlin) {
     var tmp$;
     (tmp$ = document.body) != null ? (tmp$.onload = main$lambda) : null;
   }
+  function ObjLoader(source) {
+    this.points_0 = ArrayList_init();
+    this.orderedPoints_0 = ArrayList_init();
+    var tmp$, tmp$_0, tmp$_1, tmp$_2, tmp$_3, tmp$_4, tmp$_5;
+    var lines = split(source, ['\n']);
+    tmp$ = lines.iterator();
+    while (tmp$.hasNext()) {
+      var line = tmp$.next();
+      if (startsWith(line, 'v')) {
+        var $receiver = split(line, [' ']);
+        var destination = Kotlin.kotlin.collections.ArrayList_init_za3lpa$();
+        var tmp$_6;
+        tmp$_6 = $receiver.iterator();
+        while (tmp$_6.hasNext()) {
+          var element = tmp$_6.next();
+          if (!Kotlin.equals(element, '')) {
+            destination.add_za3rmp$(element);
+          }
+        }
+        var values = destination;
+        this.points_0.add_za3rmp$(ObjLoader$ObjLoader$Point_init((tmp$_0 = Kotlin.safeParseDouble(values.get_za3lpa$(1))) != null ? tmp$_0 : Kotlin.throwNPE(), (tmp$_1 = Kotlin.safeParseDouble(values.get_za3lpa$(2))) != null ? tmp$_1 : Kotlin.throwNPE(), (tmp$_2 = Kotlin.safeParseDouble(values.get_za3lpa$(3))) != null ? tmp$_2 : Kotlin.throwNPE()));
+      }
+      if (startsWith(line, 'f')) {
+        var $receiver_0 = split(line, [' ']);
+        var destination_0 = Kotlin.kotlin.collections.ArrayList_init_za3lpa$();
+        var tmp$_7;
+        tmp$_7 = $receiver_0.iterator();
+        while (tmp$_7.hasNext()) {
+          var element_0 = tmp$_7.next();
+          if (!Kotlin.equals(element_0, '')) {
+            destination_0.add_za3rmp$(element_0);
+          }
+        }
+        var values_0 = destination_0;
+        var p1idx = ((tmp$_3 = Kotlin.safeParseInt(values_0.get_za3lpa$(1))) != null ? tmp$_3 : Kotlin.throwNPE()) - 1;
+        var p2idx = ((tmp$_4 = Kotlin.safeParseInt(values_0.get_za3lpa$(2))) != null ? tmp$_4 : Kotlin.throwNPE()) - 1;
+        var p3idx = ((tmp$_5 = Kotlin.safeParseInt(values_0.get_za3lpa$(3))) != null ? tmp$_5 : Kotlin.throwNPE()) - 1;
+        var p1 = this.points_0.get_za3lpa$(p1idx);
+        var p2 = this.points_0.get_za3lpa$(p2idx);
+        var p3 = this.points_0.get_za3lpa$(p3idx);
+        this.orderedPoints_0.add_za3rmp$(p1);
+        this.orderedPoints_0.add_za3rmp$(p2);
+        this.orderedPoints_0.add_za3rmp$(p3);
+      }
+    }
+  }
+  ObjLoader.prototype.getVertices = function () {
+    var $receiver = this.orderedPoints_0;
+    var destination = Kotlin.kotlin.collections.ArrayList_init_za3lpa$();
+    var tmp$;
+    tmp$ = $receiver.iterator();
+    while (tmp$.hasNext()) {
+      var element = tmp$.next();
+      var list = element.list();
+      Kotlin.kotlin.collections.addAll_fwwv5a$(destination, list);
+    }
+    var floatList = destination;
+    return new Float32Array(Kotlin.kotlin.collections.copyToArray(floatList));
+  };
+  ObjLoader.prototype.getColors = function () {
+    var $receiver = this.orderedPoints_0;
+    var destination = Kotlin.kotlin.collections.ArrayList_init_za3lpa$();
+    var tmp$;
+    tmp$ = $receiver.iterator();
+    while (tmp$.hasNext()) {
+      var element = tmp$.next();
+      var list = element.color.list();
+      Kotlin.kotlin.collections.addAll_fwwv5a$(destination, list);
+    }
+    var colorsList = destination;
+    return new Float32Array(Kotlin.kotlin.collections.copyToArray(colorsList));
+  };
+  ObjLoader.prototype.getNumPoints = function () {
+    return this.orderedPoints_0.size;
+  };
+  function ObjLoader$Point(x, y, z, color) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.color = color;
+  }
+  ObjLoader$Point.prototype.list = function () {
+    return listOf([this.x, this.y, this.z]);
+  };
+  function ObjLoader$Point$Color(r, g, b, a) {
+    ObjLoader$Point$Color$Companion_getInstance();
+    this.r = r;
+    this.g = g;
+    this.b = b;
+    this.a = a;
+  }
+  function ObjLoader$Point$Color$Companion() {
+    ObjLoader$Point$Color$Companion_instance = this;
+  }
+  ObjLoader$Point$Color$Companion.prototype.randomColor = function () {
+    return ObjLoader$Point$ObjLoader$Point$Color_init(Math.random(), Math.random(), Math.random(), 1.0);
+  };
+  ObjLoader$Point$Color$Companion.$metadata$ = {
+    type: Kotlin.TYPE.OBJECT,
+    classIndex: Kotlin.newClassIndex(),
+    simpleName: 'Companion',
+    baseClasses: []
+  };
+  var ObjLoader$Point$Color$Companion_instance = null;
+  function ObjLoader$Point$Color$Companion_getInstance() {
+    if (ObjLoader$Point$Color$Companion_instance === null) {
+      ObjLoader$Point$Color$Companion_instance = new ObjLoader$Point$Color$Companion();
+    }
+    return ObjLoader$Point$Color$Companion_instance;
+  }
+  ObjLoader$Point$Color.prototype.list = function () {
+    return listOf([this.r, this.g, this.b, this.a]);
+  };
+  ObjLoader$Point$Color.$metadata$ = {
+    type: Kotlin.TYPE.CLASS,
+    classIndex: Kotlin.newClassIndex(),
+    simpleName: 'Color',
+    baseClasses: []
+  };
+  ObjLoader$Point$Color.prototype.component1 = function () {
+    return this.r;
+  };
+  ObjLoader$Point$Color.prototype.component2 = function () {
+    return this.g;
+  };
+  ObjLoader$Point$Color.prototype.component3 = function () {
+    return this.b;
+  };
+  ObjLoader$Point$Color.prototype.component4 = function () {
+    return this.a;
+  };
+  ObjLoader$Point$Color.prototype.copy_7b5o5w$ = function (r, g, b, a) {
+    return new ObjLoader$Point$ObjLoader$Point$Color_init(r === void 0 ? this.r : r, g === void 0 ? this.g : g, b === void 0 ? this.b : b, a === void 0 ? this.a : a);
+  };
+  ObjLoader$Point$Color.prototype.toString = function () {
+    return 'Color(r=' + Kotlin.toString(this.r) + (', g=' + Kotlin.toString(this.g)) + (', b=' + Kotlin.toString(this.b)) + (', a=' + Kotlin.toString(this.a)) + ')';
+  };
+  ObjLoader$Point$Color.prototype.hashCode = function () {
+    var result = 0;
+    result = result * 31 + Kotlin.hashCode(this.r) | 0;
+    result = result * 31 + Kotlin.hashCode(this.g) | 0;
+    result = result * 31 + Kotlin.hashCode(this.b) | 0;
+    result = result * 31 + Kotlin.hashCode(this.a) | 0;
+    return result;
+  };
+  ObjLoader$Point$Color.prototype.equals = function (other) {
+    return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.r, other.r) && Kotlin.equals(this.g, other.g) && Kotlin.equals(this.b, other.b) && Kotlin.equals(this.a, other.a)))));
+  };
+  ObjLoader$Point.$metadata$ = {
+    type: Kotlin.TYPE.CLASS,
+    classIndex: Kotlin.newClassIndex(),
+    simpleName: 'Point',
+    baseClasses: []
+  };
+  ObjLoader$Point.prototype.component1 = function () {
+    return this.x;
+  };
+  ObjLoader$Point.prototype.component2 = function () {
+    return this.y;
+  };
+  ObjLoader$Point.prototype.component3 = function () {
+    return this.z;
+  };
+  ObjLoader$Point.prototype.component4 = function () {
+    return this.color;
+  };
+  ObjLoader$Point.prototype.copy_msjxpg$ = function (x, y, z, color) {
+    return new ObjLoader$ObjLoader$Point_init(x === void 0 ? this.x : x, y === void 0 ? this.y : y, z === void 0 ? this.z : z, color === void 0 ? this.color : color);
+  };
+  ObjLoader$Point.prototype.toString = function () {
+    return 'Point(x=' + Kotlin.toString(this.x) + (', y=' + Kotlin.toString(this.y)) + (', z=' + Kotlin.toString(this.z)) + (', color=' + Kotlin.toString(this.color)) + ')';
+  };
+  ObjLoader$Point.prototype.hashCode = function () {
+    var result = 0;
+    result = result * 31 + Kotlin.hashCode(this.x) | 0;
+    result = result * 31 + Kotlin.hashCode(this.y) | 0;
+    result = result * 31 + Kotlin.hashCode(this.z) | 0;
+    result = result * 31 + Kotlin.hashCode(this.color) | 0;
+    return result;
+  };
+  ObjLoader$Point.prototype.equals = function (other) {
+    return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.x, other.x) && Kotlin.equals(this.y, other.y) && Kotlin.equals(this.z, other.z) && Kotlin.equals(this.color, other.color)))));
+  };
+  function ObjLoader$Face(p1, p2, p3) {
+    this.p1 = p1;
+    this.p2 = p2;
+    this.p3 = p3;
+  }
+  ObjLoader$Face.$metadata$ = {
+    type: Kotlin.TYPE.CLASS,
+    classIndex: Kotlin.newClassIndex(),
+    simpleName: 'Face',
+    baseClasses: []
+  };
+  ObjLoader$Face.prototype.component1 = function () {
+    return this.p1;
+  };
+  ObjLoader$Face.prototype.component2 = function () {
+    return this.p2;
+  };
+  ObjLoader$Face.prototype.component3 = function () {
+    return this.p3;
+  };
+  ObjLoader$Face.prototype.copy_a3tqwk$ = function (p1, p2, p3) {
+    return new ObjLoader$Face(p1 === void 0 ? this.p1 : p1, p2 === void 0 ? this.p2 : p2, p3 === void 0 ? this.p3 : p3);
+  };
+  ObjLoader$Face.prototype.toString = function () {
+    return 'Face(p1=' + Kotlin.toString(this.p1) + (', p2=' + Kotlin.toString(this.p2)) + (', p3=' + Kotlin.toString(this.p3)) + ')';
+  };
+  ObjLoader$Face.prototype.hashCode = function () {
+    var result = 0;
+    result = result * 31 + Kotlin.hashCode(this.p1) | 0;
+    result = result * 31 + Kotlin.hashCode(this.p2) | 0;
+    result = result * 31 + Kotlin.hashCode(this.p3) | 0;
+    return result;
+  };
+  ObjLoader$Face.prototype.equals = function (other) {
+    return this === other || (other !== null && (typeof other === 'object' && (Object.getPrototypeOf(this) === Object.getPrototypeOf(other) && (Kotlin.equals(this.p1, other.p1) && Kotlin.equals(this.p2, other.p2) && Kotlin.equals(this.p3, other.p3)))));
+  };
+  ObjLoader.$metadata$ = {
+    type: Kotlin.TYPE.CLASS,
+    classIndex: Kotlin.newClassIndex(),
+    simpleName: 'ObjLoader',
+    baseClasses: []
+  };
   function ResourceLoader(resourceLocations) {
     this.resourceMap_0 = HashMap_init();
     this.fetchParams_0 = {};
@@ -298,15 +534,21 @@ var WebGL = function (_, Kotlin) {
     return response.text();
   }
   function ResourceLoader$makeRequest$lambda_0(this$ResourceLoader, closure$uri) {
-    return function (text) {
+    return function (text_0) {
       var tmp$, tmp$_0, tmp$_1;
       (tmp$ = this$ResourceLoader.resourceMap_0.get_za3rmp$(closure$uri)) != null ? (tmp$.loaded = true) : null;
-      (tmp$_1 = this$ResourceLoader.resourceMap_0.get_za3rmp$(closure$uri)) != null ? (tmp$_1.value = typeof (tmp$_0 = text) === 'string' ? tmp$_0 : Kotlin.throwCCE()) : null;
+      (tmp$_1 = this$ResourceLoader.resourceMap_0.get_za3rmp$(closure$uri)) != null ? (tmp$_1.value = typeof (tmp$_0 = text_0) === 'string' ? tmp$_0 : Kotlin.throwCCE()) : null;
       return null;
     };
   }
+  function ResourceLoader$makeRequest$lambda_1(closure$uri, this$ResourceLoader) {
+    return function (e) {
+      Kotlin.println('Getting ' + closure$uri + ' failed with ' + e + '. Trying again');
+      this$ResourceLoader.makeRequest_0(closure$uri);
+    };
+  }
   ResourceLoader.prototype.makeRequest_0 = function (uri) {
-    window.fetch(uri, this.fetchParams_0).then(ResourceLoader$makeRequest$lambda).then(ResourceLoader$makeRequest$lambda_0(this, uri));
+    window.fetch(uri, this.fetchParams_0).then(ResourceLoader$makeRequest$lambda).then(ResourceLoader$makeRequest$lambda_0(this, uri)).catch(ResourceLoader$makeRequest$lambda_1(uri, this));
   };
   ResourceLoader.prototype.get_61zpoe$ = function (name) {
     var tmp$;
@@ -329,23 +571,6 @@ var WebGL = function (_, Kotlin) {
     simpleName: 'ResourceLoader',
     baseClasses: []
   };
-  var vertexShaderSource;
-  var fragmentShaderSource;
-  function getFragmentShader(webgl) {
-    return getShader(webgl, fragmentShaderSource, WebGLRenderingContext.FRAGMENT_SHADER);
-  }
-  function getVertexShader(webgl) {
-    return getShader(webgl, vertexShaderSource, WebGLRenderingContext.VERTEX_SHADER);
-  }
-  function getShader(webgl, shaderSource, shaderType) {
-    var shader = webgl.createShader(shaderType);
-    webgl.shaderSource(shader, shaderSource);
-    webgl.compileShader(shader);
-    if (shader == null) {
-      throw new IllegalStateException('Shader is null!');
-    }
-    return shader;
-  }
   function Mat4(array) {
     this.array = array;
   }
@@ -353,40 +578,40 @@ var WebGL = function (_, Kotlin) {
     return new Mat4(this.array);
   };
   Mat4.prototype.identity = function () {
-    return mat4.identity(this.array);
+    mat4.identity(this.array);
   };
   Mat4.prototype.transpose = function () {
-    return mat4.transpose(this.array, this.array);
+    mat4.transpose(this.array, this.array);
   };
   Mat4.prototype.invert = function () {
-    return mat4.invert(this.array, this.array);
+    mat4.invert(this.array, this.array);
   };
   Mat4.prototype.adjoint = function () {
-    return mat4.adjoint(this.array, this.array);
+    mat4.adjoint(this.array, this.array);
   };
   Mat4.prototype.determinant = function () {
     return mat4.determinant(this.array);
   };
   Mat4.prototype.translate_k6echg$ = function (v) {
-    return mat4.translate(this.array, this.array, v.array);
+    mat4.translate(this.array, this.array, v.array);
   };
-  Mat4.prototype.rotateX_mx4ult$ = function (rad) {
-    return mat4.rotateX(this.array, this.array, rad);
+  Mat4.prototype.rotateX_3p81yu$ = function (rad) {
+    mat4.rotateX(this.array, this.array, Kotlin.numberToDouble(rad));
   };
-  Mat4.prototype.rotateY_mx4ult$ = function (rad) {
-    return mat4.rotateY(this.array, this.array, rad);
+  Mat4.prototype.rotateY_3p81yu$ = function (rad) {
+    mat4.rotateY(this.array, this.array, Kotlin.numberToDouble(rad));
   };
-  Mat4.prototype.rotateZ_mx4ult$ = function (rad) {
-    return mat4.rotateZ(this.array, this.array, rad);
+  Mat4.prototype.rotateZ_3p81yu$ = function (rad) {
+    mat4.rotateZ(this.array, this.array, Kotlin.numberToDouble(rad));
   };
   Mat4.prototype.scale_k6echg$ = function (v) {
-    return mat4.scale(this.array, this.array, v.array);
+    mat4.scale(this.array, this.array, v.array);
   };
   Mat4.prototype.lookAt_p3layc$ = function (eye, center, up) {
-    return mat4.lookAt(this.array, eye.array, center.array, up.array);
+    mat4.lookAt(this.array, eye.array, center.array, up.array);
   };
-  Mat4.prototype.perspective_7b5o5w$ = function (fovy, aspect, near, far) {
-    return mat4.perspective(this.array, fovy, aspect, near, far);
+  Mat4.prototype.perspective_1ugm5o$ = function (fovy, aspect, near, far) {
+    mat4.perspective(this.array, Kotlin.numberToDouble(fovy), Kotlin.numberToDouble(aspect), Kotlin.numberToDouble(near), Kotlin.numberToDouble(far));
   };
   Mat4.prototype.multiply_k68j1l$ = function (other) {
     var ret = Mat4_init();
@@ -408,45 +633,53 @@ var WebGL = function (_, Kotlin) {
     simpleName: 'Vec3',
     baseClasses: []
   };
-  _.insertElem = insertElem;
   _.WebGLWrapper = WebGLWrapper;
   Object.defineProperty(Point$Color, 'Companion', {
     get: Point$Color$Companion_getInstance
   });
+  Point.Color_init_1ugm5o$ = Point$Point$Color_init;
   Point.Color = Point$Color;
-  _.Point_init_y2kzbl$ = Point_init_0;
-  _.Point_init_qt1dr2$ = Point_init_1;
-  _.Point_init_yvo9jy$ = Point_init;
+  _.Point_init_a2j3zq$ = Point_init;
   _.Point = Point;
   _.main_kand9s$ = main;
+  Object.defineProperty(ObjLoader$Point$Color, 'Companion', {
+    get: ObjLoader$Point$Color$Companion_getInstance
+  });
+  ObjLoader$Point.Color_init_1ugm5o$ = ObjLoader$Point$ObjLoader$Point$Color_init;
+  ObjLoader$Point.Color = ObjLoader$Point$Color;
+  ObjLoader.Point_init_a2j3zq$ = ObjLoader$ObjLoader$Point_init;
+  ObjLoader.Point = ObjLoader$Point;
+  ObjLoader.Face = ObjLoader$Face;
+  _.ObjLoader = ObjLoader;
   _.ResourceLoader = ResourceLoader;
-  _.getFragmentShader_tnk6ih$ = getFragmentShader;
-  _.getVertexShader_tnk6ih$ = getVertexShader;
   var package$com = _.com || (_.com = {});
   var package$tanelso2 = package$com.tanelso2 || (package$com.tanelso2 = {});
   var package$glmatrix = package$tanelso2.glmatrix || (package$tanelso2.glmatrix = {});
   package$glmatrix.Mat4_init = Mat4_init;
   package$glmatrix.Mat4_init_o5v4nz$ = Mat4_init_0;
   package$glmatrix.Mat4 = Mat4;
-  package$glmatrix.Vec3_init_y2kzbl$ = Vec3_init;
+  package$glmatrix.Vec3_init_a2j3zq$ = Vec3_init;
   package$glmatrix.Vec3 = Vec3;
-  function Point_init_0(x, y, z, $this) {
-    $this = $this || Object.create(Point.prototype);
-    Point.call($this, x, y, z, Point$Color$Companion_getInstance().randomColor());
-    return $this;
-  }
-  function Point_init_1(x, y, z, $this) {
-    $this = $this || Object.create(Point.prototype);
-    Point_init_0(x, y, z, $this);
+  function Point$Point$Color_init(r, g, b, a, $this) {
+    $this = $this || Object.create(Point$Color.prototype);
+    Point$Color.call($this, Kotlin.numberToDouble(r), Kotlin.numberToDouble(g), Kotlin.numberToDouble(b), Kotlin.numberToDouble(a));
     return $this;
   }
   function Point_init(x, y, z, $this) {
     $this = $this || Object.create(Point.prototype);
-    Point_init_0(x, y, z, $this);
+    Point.call($this, Kotlin.numberToDouble(x), Kotlin.numberToDouble(y), Kotlin.numberToDouble(z), Point$Color$Companion_getInstance().randomColor());
     return $this;
   }
-  vertexShaderSource = '\n   attribute vec3 aVertexPosition;\n   attribute vec4 aVertexColor;\n\n    uniform mat4 uMVMatrix;\n    varying vec4 vColor;\n\n    void main(void) {\n        gl_Position = uMVMatrix*vec4(aVertexPosition, 1.0);\n        vColor = aVertexColor;\n    }\n';
-  fragmentShaderSource = '\n    precision mediump float;\n    varying vec4 vColor;\n    void main(void) {\n            gl_FragColor = vColor;\n     }\n';
+  function ObjLoader$Point$ObjLoader$Point$Color_init(r, g, b, a, $this) {
+    $this = $this || Object.create(ObjLoader$Point$Color.prototype);
+    ObjLoader$Point$Color.call($this, Kotlin.numberToDouble(r), Kotlin.numberToDouble(g), Kotlin.numberToDouble(b), Kotlin.numberToDouble(a));
+    return $this;
+  }
+  function ObjLoader$ObjLoader$Point_init(x, y, z, $this) {
+    $this = $this || Object.create(ObjLoader$Point.prototype);
+    ObjLoader$Point.call($this, Kotlin.numberToDouble(x), Kotlin.numberToDouble(y), Kotlin.numberToDouble(z), ObjLoader$Point$Color$Companion_getInstance().randomColor());
+    return $this;
+  }
   function Mat4_init($this) {
     $this = $this || Object.create(Mat4.prototype);
     Mat4.call($this, new Float32Array(mat4.create()));
@@ -459,7 +692,7 @@ var WebGL = function (_, Kotlin) {
   }
   function Vec3_init(x, y, z, $this) {
     $this = $this || Object.create(Vec3.prototype);
-    Vec3.call($this, vec3.fromValues(x, y, z));
+    Vec3.call($this, vec3.fromValues(Kotlin.numberToDouble(x), Kotlin.numberToDouble(y), Kotlin.numberToDouble(z)));
     return $this;
   }
   Kotlin.defineModule('WebGL', _);
