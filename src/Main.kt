@@ -1,10 +1,13 @@
+
 import com.tanelso2.glmatrix.Mat4
 import com.tanelso2.glmatrix.Vec3
-import org.khronos.webgl.*
-import org.khronos.webgl.WebGLRenderingContext as GL
+import org.khronos.webgl.Float32Array
+import org.khronos.webgl.WebGLProgram
+import org.khronos.webgl.WebGLShader
 import org.w3c.dom.HTMLCanvasElement
 import kotlin.browser.document
 import kotlin.browser.window
+import org.khronos.webgl.WebGLRenderingContext as GL
 
 class WebGLWrapper {
     val canvas: HTMLCanvasElement = document.getElementById("webglCanvas") as HTMLCanvasElement
@@ -59,18 +62,21 @@ class WebGLWrapper {
     val vertexList: List<Float> = trianglesArray.flatMap { listOf(it.x, it.y, it.z) }
     val colorList: List<Float> = trianglesArray.flatMap { it.color.list() }
 
+    private val vertexShaderLocation = "vertex-shader.glsl"
+    private val fragmentShaderLocation = "frag-shader.glsl"
     val resourceList = arrayOf(
-            "frag-shader.txt",
-            "vertex-shader.txt"
+            fragmentShaderLocation,
+            vertexShaderLocation
     )
 
     val resourceLoader = ResourceLoader(*resourceList)
 
+
     fun setup() {
         if(resourceLoader.allLoaded()) {
-            val vertexShaderSource = resourceLoader.get("vertex-shader.txt") ?: ""
+            val vertexShaderSource = resourceLoader.get(vertexShaderLocation)!!
             val vertexShader = getVertexShader(vertexShaderSource)
-            val fragmentShaderSource = resourceLoader.get("frag-shader.txt") ?: ""
+            val fragmentShaderSource = resourceLoader.get(fragmentShaderLocation)!!
             val fragmentShader = getFragmentShader(fragmentShaderSource)
             webgl.attachShader(shaderProgram, vertexShader)
             webgl.attachShader(shaderProgram, fragmentShader)
@@ -130,7 +136,7 @@ class WebGLWrapper {
         val translateMatrix = Mat4()
         translateMatrix.translate(Vec3(0f, 0f, -1.5f))
         val perspectiveMatrix = Mat4()
-        perspectiveMatrix.perspective(1f, (Math.PI / 2).toFloat(), 0.5f, 100f)
+        perspectiveMatrix.perspective(1, (Math.PI / 2).toFloat(), 0.5f, 100f)
         val finalMatrix = perspectiveMatrix.multiply(translateMatrix).multiply(mvMatrix)
         val mvMatrixUniform = webgl.getUniformLocation(shaderProgram, "uMVMatrix")
         webgl.uniformMatrix4fv(mvMatrixUniform, false, finalMatrix.array)
@@ -146,20 +152,19 @@ class WebGLWrapper {
 }
 
 data class Point(val x: Float, val y: Float, val z: Float, val color: Color) {
-    constructor(x: Float, y: Float, z: Float):
-            this(x, y, z, Color.randomColor())
-    constructor(x: Int, y: Int, z: Int):
-            this(x.toFloat(), y.toFloat(), z.toFloat())
-    constructor(x: Double, y: Double, z: Double):
-            this(x.toFloat(), y.toFloat(), z.toFloat())
+    constructor(x: Number, y: Number, z: Number):
+            this(x.toFloat(), y.toFloat(), z.toFloat(), Color.randomColor())
 
     data class Color(val r: Float, val g: Float, val b: Float, val a: Float) {
+        constructor(r: Number, g: Number, b: Number, a:Number):
+            this(r.toFloat(), g.toFloat(), b.toFloat(), a.toFloat())
+
         companion object {
             fun randomColor() = Color(
-                    Math.random().toFloat(),
-                    Math.random().toFloat(),
-                    Math.random().toFloat(),
-                    1f
+                    Math.random(),
+                    Math.random(),
+                    Math.random(),
+                    1.0
             )
         }
 
