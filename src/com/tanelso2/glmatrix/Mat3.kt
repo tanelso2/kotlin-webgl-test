@@ -4,6 +4,27 @@ import org.khronos.webgl.Float32Array
 
 typealias Mat3JS = Float32Array
 
+class Mat3(val array: Mat3JS) {
+    constructor():
+            this(mat3.create())
+
+    companion object {
+        fun fromMat4(source: Mat4): Mat3 {
+            val ret = Mat3()
+            mat3.fromMat4(ret.array, source.array)
+            return ret
+        }
+    }
+
+    fun invert() {
+        mat3.invert(array, array)
+    }
+
+    fun transpose() {
+        mat3.transpose(array, array)
+    }
+}
+
 external open class mat3 {
     companion object {
         fun create(): Mat3JS = noImpl

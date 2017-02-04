@@ -10,6 +10,7 @@
             </option>
             <option name="k2jsCompilerArguments">
               <K2JSCompilerArguments>
+                <option name="sourceMap" value="true" />
                 <option name="moduleKind" value="plain" />
               </K2JSCompilerArguments>
             </option>

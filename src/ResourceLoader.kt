@@ -31,7 +31,7 @@ class ResourceLoader(vararg resourceLocations: String) {
                 }
     }
 
-    fun get(name: String): String? {
+    operator fun get(name: String): String? {
         return resourceMap[name]?.value
     }
 

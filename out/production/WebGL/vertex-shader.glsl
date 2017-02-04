@@ -1,15 +1,14 @@
 attribute vec3 aVertexPosition;
-attribute vec4 aVertexColor;
+attribute vec3 aVertexNormal;
 
 uniform mat4 uMVMatrix;
-varying vec4 vColor;
+uniform mat3 uNMatrix;
+varying vec3 vertPos;
+varying vec3 normalInterp;
 
 void main(void) {
-    gl_Position = uMVMatrix*vec4(aVertexPosition, 1.0);
-    vColor = vec4(
-        aVertexPosition.y*0.33 + 0.05,
-        0.0,
-        0.0,
-        1.0
-    );
+    vec4 vertPos4 = uMVMatrix * vec4(aVertexPosition, 1.0);
+    gl_Position = vertPos4;
+    vertPos = vec3(vertPos4) / vertPos4.w;
+    normalInterp = uNMatrix * aVertexNormal;
 }

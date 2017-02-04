@@ -1,45 +1,84 @@
+import com.tanelso2.glmatrix.Vec3
 import org.khronos.webgl.Float32Array
+import org.khronos.webgl.Uint16Array
 
 class ObjLoader(source: String) {
     private val points = ArrayList<Point>()
-    private val orderedPoints = ArrayList<Point>()
+    private val faces = ArrayList<Face>()
+    private val normals = ArrayList<Vec3>()
     init {
         val lines = source.split('\n')
-        for(line in lines) {
-            if(line.startsWith('v')) {
-                val values = line.split(' ').filter { it != "" }
-                points.add(Point(
-                    safeParseDouble(values[1])!!,
-                    safeParseDouble(values[2])!!,
-                    safeParseDouble(values[3])!!
-                ))
+        lines.forEach { line ->
+            val values = line.split(' ').filter { it != "" }
+            when(values.getOrNull(0)) {
+                "v" -> points.add(Point(
+                        safeParseDouble(values[1])!!,
+                        safeParseDouble(values[2])!!,
+                        safeParseDouble(values[3])!!))
+                "f" -> faces.add(Face(
+                        safeParseInt(values[1])!! - 1,
+                        safeParseInt(values[2])!! - 1,
+                        safeParseInt(values[3])!! - 1))
+                "vn" -> normals.add(Vec3(
+                        safeParseDouble(values[1])!!,
+                        safeParseDouble(values[2])!!,
+                        safeParseDouble(values[3])!!))
             }
-            if(line.startsWith('f')) {
-                val values = line.split(' ').filter { it != "" }
-                val p1idx = safeParseInt(values[1])!! - 1
-                val p2idx = safeParseInt(values[2])!! - 1
-                val p3idx = safeParseInt(values[3])!! - 1
-                val p1 = points[p1idx]
-                val p2 = points[p2idx]
-                val p3 = points[p3idx]
-                orderedPoints.add(p1)
-                orderedPoints.add(p2)
-                orderedPoints.add(p3)
-            }
+        }
+        if (normals.isEmpty()) {
+            computeNormals()
+        }
+    }
+
+    fun computeNormals() {
+        faces.forEach { face ->
+            val p1 = points[face.p1.toInt()]
+            val p2 = points[face.p2.toInt()]
+            val p3 = points[face.p3.toInt()]
+            val w = Vec3(
+                    p2.x - p1.x,
+                    p2.y - p1.y,
+                    p2.z - p1.z
+            )
+            val v = Vec3(
+                    p3.x - p1.x,
+                    p3.y - p1.y,
+                    p3.z - p1.z
+            )
+            val normal = v.cross(w)
+            normal.normalize()
+            normals.add(normal)
         }
     }
 
     fun getVertices(): Float32Array {
-        val floatList = orderedPoints.flatMap { it.list() }
+        val floatList = points.flatMap { it.list() }
         return Float32Array(floatList.toTypedArray())
     }
 
+    fun getVertexNormals(): Float32Array {
+        val floatList = normals.flatMap { listOf(it.array[0], it.array[1], it.array[2]) }
+        return Float32Array(floatList.toTypedArray())
+    }
+
+    fun getFaces(): Uint16Array {
+        val intList = faces.flatMap { it.list() }
+        return Uint16Array(intList.toTypedArray())
+    }
+
     fun getColors(): Float32Array {
-        val colorsList = orderedPoints.flatMap { it.color.list() }
+        val colorsList = points.flatMap { it.color.list() }
         return Float32Array(colorsList.toTypedArray())
     }
 
-    fun getNumPoints(): Int = orderedPoints.size
+    fun getNumFaces(): Int = faces.size
+
+    data class Face(val p1: Short, val p2: Short, val p3: Short) {
+        constructor(p1: Number, p2: Number, p3: Number):
+                this(p1.toShort(), p2.toShort(), p3.toShort())
+
+        fun list() = listOf(p1, p2, p3)
+    }
 
     data class Point(val x: Float, val y: Float, val z: Float, val color: Color) {
         constructor(x: Number, y: Number, z: Number):
@@ -64,5 +103,4 @@ class ObjLoader(source: String) {
         }
     }
 
-    data class Face(val p1: Point, val p2: Point, val p3: Point)
 }

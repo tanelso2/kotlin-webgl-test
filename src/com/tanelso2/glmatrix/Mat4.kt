@@ -60,6 +60,8 @@ class Mat4(val array: Mat4JS) {
         return ret
     }
 
+    operator fun times(other: Mat4): Mat4 = multiply(other)
+
 }
 
 external open class mat4 {

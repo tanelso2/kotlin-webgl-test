@@ -7,6 +7,18 @@ typealias Vec3JS = Float32Array
 class Vec3(val array: Vec3JS) {
     constructor(x: Number, y: Number, z: Number):
             this(vec3.fromValues(x.toFloat(), y.toFloat(), z.toFloat()))
+    constructor():
+            this(vec3.create())
+
+    fun cross(other: Vec3): Vec3 {
+        val ret = Vec3()
+        vec3.cross(ret.array, this.array, other.array)
+        return ret
+    }
+
+    fun normalize() {
+        vec3.normalize(array, array)
+    }
 }
 
 external open class vec3 {
