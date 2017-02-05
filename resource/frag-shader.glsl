@@ -1,4 +1,4 @@
-precision mediump float;
+precision highp float;
 
 uniform vec3 uLightPos;
 uniform vec3 uAmbientColor;
@@ -8,7 +8,7 @@ uniform vec3 uSpecularColor;
 varying vec3 vertPos;
 varying vec3 normalInterp;
 
-const float shininess = 4.0;
+uniform float shininess;
 
 void main(void) {
     vec3 normal = normalize(normalInterp);

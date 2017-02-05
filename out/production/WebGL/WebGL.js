@@ -11,7 +11,7 @@ var WebGL = function (_, Kotlin) {
   var getOrNull = Kotlin.kotlin.collections.getOrNull_3iu80n$;
   var HashMap_init = Kotlin.kotlin.collections.HashMap_init;
   function WebGLWrapper() {
-    var tmp$, tmp$_0, tmp$_1;
+    var tmp$, tmp$_0, tmp$_1, tmp$_2, tmp$_3, tmp$_4, tmp$_5, tmp$_6, tmp$_7;
     this.canvas = Kotlin.isType(tmp$ = document.getElementById('webglCanvas'), HTMLCanvasElement) ? tmp$ : Kotlin.throwCCE();
     this.webgl = Kotlin.isType(tmp$_0 = this.canvas.getContext('webgl'), WebGLRenderingContext) ? tmp$_0 : Kotlin.throwCCE();
     tmp$_1 = this.webgl.createProgram();
@@ -19,7 +19,23 @@ var WebGL = function (_, Kotlin) {
       throw new IllegalStateException('Could not initialize shader program');
     }
     this.shaderProgram = tmp$_1;
+    this.scaleInput = Kotlin.isType(tmp$_2 = document.getElementById('scaleInput'), HTMLInputElement) ? tmp$_2 : Kotlin.throwCCE();
+    this.scaleFactor = this.scaleInput.valueAsNumber;
+    this.lightPosXInput = Kotlin.isType(tmp$_3 = document.getElementById('lightPosX'), HTMLInputElement) ? tmp$_3 : Kotlin.throwCCE();
+    this.lightPosYInput = Kotlin.isType(tmp$_4 = document.getElementById('lightPosY'), HTMLInputElement) ? tmp$_4 : Kotlin.throwCCE();
+    this.lightPosZInput = Kotlin.isType(tmp$_5 = document.getElementById('lightPosZ'), HTMLInputElement) ? tmp$_5 : Kotlin.throwCCE();
+    this.lightPos = [this.lightPosXInput.valueAsNumber, this.lightPosYInput.valueAsNumber, this.lightPosZInput.valueAsNumber];
+    this.shininessInput = Kotlin.isType(tmp$_6 = document.getElementById('shininessInput'), HTMLInputElement) ? tmp$_6 : Kotlin.throwCCE();
+    this.shininess = this.shininessInput.valueAsNumber;
+    this.rotationSpeedInput = Kotlin.isType(tmp$_7 = document.getElementById('rotationSpeedInput'), HTMLInputElement) ? tmp$_7 : Kotlin.throwCCE();
+    this.rotationSpeed = this.rotationSpeedInput.valueAsNumber;
     this.webgl.enable(WebGLRenderingContext.DEPTH_TEST);
+    this.scaleInput.oninput = WebGLWrapper_init$lambda(this);
+    this.lightPosXInput.oninput = WebGLWrapper_init$lambda_0(this);
+    this.lightPosYInput.oninput = WebGLWrapper_init$lambda_1(this);
+    this.lightPosZInput.oninput = WebGLWrapper_init$lambda_2(this);
+    this.shininessInput.oninput = WebGLWrapper_init$lambda_3(this);
+    this.rotationSpeedInput.oninput = WebGLWrapper_init$lambda_4(this);
     this.windowWidth = 800;
     this.windowHeight = 600;
     this.vertexShaderLocation_0 = 'vertex-shader.glsl';
@@ -28,8 +44,7 @@ var WebGL = function (_, Kotlin) {
     this.resourceList = [this.fragmentShaderLocation_0, this.vertexShaderLocation_0, this.objFileLocation_0];
     this.resourceLoader = new ResourceLoader(this.resourceList.slice());
     this.objFileLoader$delegate = lazy(WebGLWrapper$objFileLoader$lambda(this));
-    this.rotZ = 2 * Math.PI;
-    this.transZ = 2 * Math.PI;
+    this.rotation = 0.0;
   }
   Object.defineProperty(WebGLWrapper.prototype, 'objFileLoader', {
     get: function () {
@@ -53,11 +68,12 @@ var WebGL = function (_, Kotlin) {
       this.compileShaderProgram_0();
       this.setupAttribute_0('aVertexPosition', this.objFileLoader.getVertices());
       this.setupAttribute_0('aVertexNormal', this.objFileLoader.getVertexNormals());
-      var lightPos = [20.0, -20.0, 5.5];
-      var ambientColor = [0.10000000149011612, 0.20000000298023224, 0.20000000298023224];
-      var specularColor = [0.30000001192092896, 0.6000000238418579, 0.0];
-      var diffuseColor = [0.5, 0.5, 0.5];
-      this.setupUniformVec3Float_0(lightPos, 'uLightPos');
+      Kotlin.println('Vertex array size = ' + this.objFileLoader.getVertices().length);
+      Kotlin.println('Vertex normal array size = ' + this.objFileLoader.getVertexNormals().length);
+      var ambientColor = [0.10000000149011612, 0.10000000149011612, 0.10000000149011612];
+      var diffuseColor = [0.4000000059604645, 0.4000000059604645, 0.0];
+      var specularColor = [1.0, 1.0, 1.0];
+      this.setupUniformVec3Float_0(this.lightPos, 'uLightPos');
       this.setupUniformVec3Float_0(ambientColor, 'uAmbientColor');
       this.setupUniformVec3Float_0(diffuseColor, 'uDiffuseColor');
       this.setupUniformVec3Float_0(specularColor, 'uSpecularColor');
@@ -91,6 +107,7 @@ var WebGL = function (_, Kotlin) {
     this.webgl.attachShader(this.shaderProgram, vertexShader);
     this.webgl.attachShader(this.shaderProgram, fragmentShader);
     this.webgl.linkProgram(this.shaderProgram);
+    Kotlin.println(this.webgl.getProgramInfoLog(this.shaderProgram));
     this.webgl.useProgram(this.shaderProgram);
   };
   WebGLWrapper.prototype.getFragmentShader_61zpoe$ = function (source) {
@@ -113,29 +130,29 @@ var WebGL = function (_, Kotlin) {
     return shader;
   };
   WebGLWrapper.prototype.draw = function () {
-    this.rotZ -= 0.02;
-    this.transZ += 0.02;
-    var transX = 0.0;
-    var transY = 0.0;
-    var transZ = Math.sin(this.transZ);
-    var mvMatrix = Mat4_init();
-    mvMatrix.translate_k6echg$(Vec3_init(transX, transY, transZ));
-    mvMatrix.scale_k6echg$(Vec3_init(1.0, 1.0, 1.0));
-    mvMatrix.rotateX_3p81yu$(this.rotZ);
-    mvMatrix.rotateY_3p81yu$(0);
-    mvMatrix.rotateZ_3p81yu$(0);
-    var nMatrix = Mat3$Companion_getInstance().fromMat4_k68j1l$(mvMatrix);
+    this.setupUniformVec3Float_0(this.lightPos, 'uLightPos');
+    var shininessUniform = this.webgl.getUniformLocation(this.shaderProgram, 'shininess');
+    this.webgl.uniform1f(shininessUniform, this.shininess);
+    var pMatrix = Mat4_init();
+    pMatrix.perspective_1ugm5o$(Math.PI / 3, 16.0 / 9.0, 0.1, 60.0);
+    var vMatrix = Mat4_init();
+    vMatrix.lookAt_p3layc$(Vec3_init(20, 20, 20), Vec3_init(0, 0, 0), Vec3_init(0, 0, 1));
+    var mMatrix = Mat4_init();
+    mMatrix.scale_3p81yu$(this.scaleFactor);
+    this.rotation += this.rotationSpeed;
+    mMatrix.rotateX_3p81yu$(Math.PI / 2);
+    mMatrix.rotateY_3p81yu$(this.rotation);
+    var nMatrix = Mat3$Companion_getInstance().fromMat4_k68j1l$(vMatrix.times_k68j1l$(mMatrix));
     nMatrix.transpose();
     nMatrix.invert();
     var nMatrixUniform = this.webgl.getUniformLocation(this.shaderProgram, 'uNMatrix');
     this.webgl.uniformMatrix3fv(nMatrixUniform, false, nMatrix.array);
-    var translateMatrix = Mat4_init();
-    translateMatrix.translate_k6echg$(Vec3_init(0.0, 0.0, -5.5));
-    var perspectiveMatrix = Mat4_init();
-    perspectiveMatrix.perspective_1ugm5o$(1, Math.PI / 2, 0.5, 100.0);
-    var finalMatrix = perspectiveMatrix.times_k68j1l$(translateMatrix).times_k68j1l$(mvMatrix);
-    var mvMatrixUniform = this.webgl.getUniformLocation(this.shaderProgram, 'uMVMatrix');
-    this.webgl.uniformMatrix4fv(mvMatrixUniform, false, finalMatrix.array);
+    var pMatrixUniform = this.webgl.getUniformLocation(this.shaderProgram, 'uPMatrix');
+    this.webgl.uniformMatrix4fv(pMatrixUniform, false, pMatrix.array);
+    var vMatrixUniform = this.webgl.getUniformLocation(this.shaderProgram, 'uVMatrix');
+    this.webgl.uniformMatrix4fv(vMatrixUniform, false, vMatrix.array);
+    var mMatrixUniform = this.webgl.getUniformLocation(this.shaderProgram, 'uMMatrix');
+    this.webgl.uniformMatrix4fv(mMatrixUniform, false, mMatrix.array);
     this.webgl.drawElements(WebGLRenderingContext.TRIANGLES, this.objFileLoader.getNumFaces() * 3, WebGLRenderingContext.UNSIGNED_SHORT, 0);
   };
   function WebGLWrapper$render$lambda(this$WebGLWrapper) {
@@ -149,6 +166,42 @@ var WebGL = function (_, Kotlin) {
     this.draw();
     window.requestAnimationFrame(WebGLWrapper$render$lambda(this));
   };
+  function WebGLWrapper_init$lambda(this$WebGLWrapper) {
+    return function (it) {
+      this$WebGLWrapper.scaleFactor = this$WebGLWrapper.scaleInput.valueAsNumber;
+      return null;
+    };
+  }
+  function WebGLWrapper_init$lambda_0(this$WebGLWrapper) {
+    return function (it) {
+      this$WebGLWrapper.lightPos[0] = this$WebGLWrapper.lightPosXInput.valueAsNumber;
+      return null;
+    };
+  }
+  function WebGLWrapper_init$lambda_1(this$WebGLWrapper) {
+    return function (it) {
+      this$WebGLWrapper.lightPos[1] = this$WebGLWrapper.lightPosYInput.valueAsNumber;
+      return null;
+    };
+  }
+  function WebGLWrapper_init$lambda_2(this$WebGLWrapper) {
+    return function (it) {
+      this$WebGLWrapper.lightPos[2] = this$WebGLWrapper.lightPosZInput.valueAsNumber;
+      return null;
+    };
+  }
+  function WebGLWrapper_init$lambda_3(this$WebGLWrapper) {
+    return function (it) {
+      this$WebGLWrapper.shininess = this$WebGLWrapper.shininessInput.valueAsNumber;
+      return null;
+    };
+  }
+  function WebGLWrapper_init$lambda_4(this$WebGLWrapper) {
+    return function (it) {
+      this$WebGLWrapper.rotationSpeed = this$WebGLWrapper.rotationSpeedInput.valueAsNumber;
+      return null;
+    };
+  }
   function WebGLWrapper$objFileLoader$lambda(this$WebGLWrapper) {
     return function () {
       var tmp$;
@@ -207,19 +260,34 @@ var WebGL = function (_, Kotlin) {
       this.computeNormals();
     }
   }
+  function ObjLoader$computeNormals$lambda(it) {
+    return Vec3_init_0();
+  }
   ObjLoader.prototype.computeNormals = function () {
+    var tmpNormals = Kotlin.arrayFromFun(this.points_0.size, ObjLoader$computeNormals$lambda);
     var tmp$;
     tmp$ = this.faces_0.iterator();
     while (tmp$.hasNext()) {
       var element = tmp$.next();
-      var p1 = this.points_0.get_za3lpa$(element.p1);
-      var p2 = this.points_0.get_za3lpa$(element.p2);
-      var p3 = this.points_0.get_za3lpa$(element.p3);
+      var idx1 = element.p1;
+      var idx2 = element.p2;
+      var idx3 = element.p3;
+      var p1 = this.points_0.get_za3lpa$(idx1);
+      var p2 = this.points_0.get_za3lpa$(idx2);
+      var p3 = this.points_0.get_za3lpa$(idx3);
       var w = Vec3_init(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
       var v = Vec3_init(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
       var normal = v.cross_k6echg$(w);
       normal.normalize();
-      this.normals_0.add_za3rmp$(normal);
+      tmpNormals[idx1] = tmpNormals[idx1].plus_k6echg$(normal);
+      tmpNormals[idx2] = tmpNormals[idx2].plus_k6echg$(normal);
+      tmpNormals[idx3] = tmpNormals[idx3].plus_k6echg$(normal);
+    }
+    var tmp$_0;
+    for (tmp$_0 = 0; tmp$_0 !== tmpNormals.length; ++tmp$_0) {
+      var element_0 = tmpNormals[tmp$_0];
+      element_0.normalize();
+      this.normals_0.add_za3rmp$(element_0);
     }
   };
   ObjLoader.prototype.getVertices = function () {
@@ -564,6 +632,9 @@ var WebGL = function (_, Kotlin) {
   Mat4.prototype.rotateZ_3p81yu$ = function (rad) {
     mat4.rotateZ(this.array, this.array, Kotlin.numberToDouble(rad));
   };
+  Mat4.prototype.scale_3p81yu$ = function (amount) {
+    this.scale_k6echg$(Vec3_init(amount, amount, amount));
+  };
   Mat4.prototype.scale_k6echg$ = function (v) {
     mat4.scale(this.array, this.array, v.array);
   };
@@ -597,6 +668,14 @@ var WebGL = function (_, Kotlin) {
   };
   Vec3.prototype.normalize = function () {
     vec3.normalize(this.array, this.array);
+  };
+  Vec3.prototype.plus_k6echg$ = function (other) {
+    return this.add_k6echg$(other);
+  };
+  Vec3.prototype.add_k6echg$ = function (other) {
+    var ret = Vec3_init_0();
+    vec3.add(ret.array, this.array, other.array);
+    return ret;
   };
   Vec3.$metadata$ = {
     type: Kotlin.TYPE.CLASS,

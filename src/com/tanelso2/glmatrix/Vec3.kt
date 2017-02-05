@@ -19,6 +19,14 @@ class Vec3(val array: Vec3JS) {
     fun normalize() {
         vec3.normalize(array, array)
     }
+
+    operator fun plus(other: Vec3) = add(other)
+
+    fun add(other: Vec3): Vec3 {
+        val ret = Vec3()
+        vec3.add(ret.array, this.array, other.array)
+        return ret
+    }
 }
 
 external open class vec3 {

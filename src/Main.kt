@@ -6,6 +6,7 @@ import org.khronos.webgl.Float32Array
 import org.khronos.webgl.WebGLProgram
 import org.khronos.webgl.WebGLShader
 import org.w3c.dom.HTMLCanvasElement
+import org.w3c.dom.HTMLInputElement
 import kotlin.browser.document
 import kotlin.browser.window
 import org.khronos.webgl.WebGLRenderingContext as GL
@@ -15,8 +16,32 @@ class WebGLWrapper {
     val webgl: GL = canvas.getContext("webgl") as GL
     val shaderProgram: WebGLProgram = webgl.createProgram() ?: throw IllegalStateException("Could not initialize shader program")
 
+    val scaleInput = document.getElementById("scaleInput") as HTMLInputElement
+    var scaleFactor = scaleInput.valueAsNumber
+
+    val lightPosXInput = document.getElementById("lightPosX") as HTMLInputElement
+    val lightPosYInput = document.getElementById("lightPosY") as HTMLInputElement
+    val lightPosZInput = document.getElementById("lightPosZ") as HTMLInputElement
+    val lightPos = arrayOf(
+            lightPosXInput.valueAsNumber.toFloat(),
+            lightPosYInput.valueAsNumber.toFloat(),
+            lightPosZInput.valueAsNumber.toFloat()
+    )
+
+    val shininessInput = document.getElementById("shininessInput") as HTMLInputElement
+    var shininess = shininessInput.valueAsNumber
+
+    val rotationSpeedInput = document.getElementById("rotationSpeedInput") as HTMLInputElement
+    var rotationSpeed = rotationSpeedInput.valueAsNumber
+
     init {
         webgl.enable(GL.DEPTH_TEST)
+        scaleInput.oninput = { scaleFactor = scaleInput.valueAsNumber; null }
+        lightPosXInput.oninput = { lightPos[0] = lightPosXInput.valueAsNumber.toFloat(); null }
+        lightPosYInput.oninput = { lightPos[1] = lightPosYInput.valueAsNumber.toFloat(); null }
+        lightPosZInput.oninput = { lightPos[2] = lightPosZInput.valueAsNumber.toFloat(); null }
+        shininessInput.oninput = { shininess = shininessInput.valueAsNumber; null}
+        rotationSpeedInput.oninput = { rotationSpeed = rotationSpeedInput.valueAsNumber; null}
     }
 
     val windowWidth = 800
@@ -41,25 +66,24 @@ class WebGLWrapper {
             setupAttribute("aVertexPosition", objFileLoader.getVertices())
             setupAttribute("aVertexNormal", objFileLoader.getVertexNormals())
 
-            val lightPos = arrayOf(
-                    20.0f,
-                    -20.0f,
-                    5.5f
-            )
+            println("Vertex array size = ${objFileLoader.getVertices().length}")
+            println("Vertex normal array size = ${objFileLoader.getVertexNormals().length}")
+
+
             val ambientColor = arrayOf(
                     0.1f,
-                    0.2f,
-                    0.2f
-            )
-            val specularColor = arrayOf(
-                    0.3f,
-                    0.6f,
-                    0.0f
+                    0.1f,
+                    0.1f
             )
             val diffuseColor = arrayOf(
-                    0.5f,
-                    0.5f,
-                    0.5f
+                    0.4f,
+                    0.4f,
+                    0.0f
+            )
+            val specularColor = arrayOf(
+                    1.0f,
+                    1.0f,
+                    1.0f
             )
 
             setupUniformVec3Float(lightPos, "uLightPos")
@@ -100,11 +124,9 @@ class WebGLWrapper {
         webgl.attachShader(shaderProgram, vertexShader)
         webgl.attachShader(shaderProgram, fragmentShader)
         webgl.linkProgram(shaderProgram)
+        println(webgl.getProgramInfoLog(shaderProgram))
         webgl.useProgram(shaderProgram)
     }
-
-    var rotZ = 2 * Math.PI
-    var transZ = 2 * Math.PI
 
     fun getFragmentShader(source: String): WebGLShader = getShader(source, GL.FRAGMENT_SHADER)
     fun getVertexShader(source: String): WebGLShader = getShader(source, GL.VERTEX_SHADER)
@@ -120,30 +142,41 @@ class WebGLWrapper {
         return shader ?: throw IllegalStateException("Shader is null!")
     }
 
+    var rotation = 0.0
     fun draw() {
-        rotZ -= 0.02
-        transZ += 0.02
-        val transX = 0f
-        val transY = 0f
-        val transZ = Math.sin(transZ).toFloat()
-        val mvMatrix = Mat4()
-        mvMatrix.translate(Vec3(transX, transY, transZ))
-        mvMatrix.scale(Vec3(1f, 1f, 1f))
-        mvMatrix.rotateX(rotZ)
-        mvMatrix.rotateY(0)
-        mvMatrix.rotateZ(0)
-        val nMatrix = Mat3.fromMat4(mvMatrix)
+        setupUniformVec3Float(lightPos, "uLightPos")
+
+        val shininessUniform = webgl.getUniformLocation(shaderProgram, "shininess")
+        webgl.uniform1f(shininessUniform, shininess.toFloat())
+
+        val pMatrix = Mat4()
+        pMatrix.perspective(Math.PI / 3, 16.0 / 9.0, 0.1, 60.0)
+
+        val vMatrix = Mat4()
+        vMatrix.lookAt(Vec3(20,20,20), Vec3(0,0,0), Vec3(0,0,1))
+
+        val mMatrix = Mat4()
+        mMatrix.scale(scaleFactor)
+        rotation += rotationSpeed
+        mMatrix.rotateX(Math.PI / 2)
+        mMatrix.rotateY(rotation)
+
+        val nMatrix = Mat3.fromMat4(vMatrix * mMatrix)
         nMatrix.transpose()
         nMatrix.invert()
+
         val nMatrixUniform = webgl.getUniformLocation(shaderProgram, "uNMatrix")
         webgl.uniformMatrix3fv(nMatrixUniform, false, nMatrix.array)
-        val translateMatrix = Mat4()
-        translateMatrix.translate(Vec3(0f, 0f, -5.5f))
-        val perspectiveMatrix = Mat4()
-        perspectiveMatrix.perspective(1, (Math.PI / 2).toFloat(), 0.5f, 100f)
-        val finalMatrix = perspectiveMatrix * translateMatrix * mvMatrix
-        val mvMatrixUniform = webgl.getUniformLocation(shaderProgram, "uMVMatrix")
-        webgl.uniformMatrix4fv(mvMatrixUniform, false, finalMatrix.array)
+
+        val pMatrixUniform = webgl.getUniformLocation(shaderProgram, "uPMatrix")
+        webgl.uniformMatrix4fv(pMatrixUniform, false, pMatrix.array)
+
+        val vMatrixUniform = webgl.getUniformLocation(shaderProgram, "uVMatrix")
+        webgl.uniformMatrix4fv(vMatrixUniform, false, vMatrix.array)
+
+        val mMatrixUniform = webgl.getUniformLocation(shaderProgram, "uMMatrix")
+        webgl.uniformMatrix4fv(mMatrixUniform, false, mMatrix.array)
+
         webgl.drawElements(GL.TRIANGLES, objFileLoader.getNumFaces() * 3, GL.UNSIGNED_SHORT, 0)
     }
 

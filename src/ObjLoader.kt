@@ -31,10 +31,16 @@ class ObjLoader(source: String) {
     }
 
     fun computeNormals() {
+        val tmpNormals = Array(points.size, { Vec3() })
         faces.forEach { face ->
-            val p1 = points[face.p1.toInt()]
-            val p2 = points[face.p2.toInt()]
-            val p3 = points[face.p3.toInt()]
+            val idx1 = face.p1.toInt()
+            val idx2 = face.p2.toInt()
+            val idx3 = face.p3.toInt()
+
+            val p1 = points[idx1]
+            val p2 = points[idx2]
+            val p3 = points[idx3]
+
             val w = Vec3(
                     p2.x - p1.x,
                     p2.y - p1.y,
@@ -47,7 +53,14 @@ class ObjLoader(source: String) {
             )
             val normal = v.cross(w)
             normal.normalize()
-            normals.add(normal)
+
+            tmpNormals[idx1] += normal
+            tmpNormals[idx2] += normal
+            tmpNormals[idx3] += normal
+        }
+        tmpNormals.forEach {
+            it.normalize()
+            normals.add(it)
         }
     }
 

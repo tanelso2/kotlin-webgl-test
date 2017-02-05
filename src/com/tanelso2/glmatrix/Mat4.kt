@@ -42,6 +42,8 @@ class Mat4(val array: Mat4JS) {
         mat4.rotateZ(array, array, rad.toFloat())
     }
 
+    fun scale(amount: Number) = scale(Vec3(amount, amount, amount))
+
     fun scale(v: Vec3) {
         mat4.scale(array, array, v.array)
     }
