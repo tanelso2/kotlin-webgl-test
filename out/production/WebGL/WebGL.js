@@ -3,6 +3,7 @@ if (typeof kotlin === 'undefined') {
 }
 var WebGL = function (_, Kotlin) {
   'use strict';
+  var ReadOnlyProperty = Kotlin.kotlin.properties.ReadOnlyProperty;
   var IllegalStateException = Kotlin.kotlin.IllegalStateException;
   var lazy = Kotlin.kotlin.lazy_un3fny$;
   var listOf = Kotlin.kotlin.collections.listOf_9mqe4v$;
@@ -20,22 +21,19 @@ var WebGL = function (_, Kotlin) {
     }
     this.shaderProgram = tmp$_1;
     this.scaleInput = Kotlin.isType(tmp$_2 = document.getElementById('scaleInput'), HTMLInputElement) ? tmp$_2 : Kotlin.throwCCE();
-    this.scaleFactor = this.scaleInput.valueAsNumber;
+    this.scaleFactor$delegate = new WebGLWrapper$HTMLInputProperty(this.scaleInput);
     this.lightPosXInput = Kotlin.isType(tmp$_3 = document.getElementById('lightPosX'), HTMLInputElement) ? tmp$_3 : Kotlin.throwCCE();
     this.lightPosYInput = Kotlin.isType(tmp$_4 = document.getElementById('lightPosY'), HTMLInputElement) ? tmp$_4 : Kotlin.throwCCE();
     this.lightPosZInput = Kotlin.isType(tmp$_5 = document.getElementById('lightPosZ'), HTMLInputElement) ? tmp$_5 : Kotlin.throwCCE();
     this.lightPos = [this.lightPosXInput.valueAsNumber, this.lightPosYInput.valueAsNumber, this.lightPosZInput.valueAsNumber];
     this.shininessInput = Kotlin.isType(tmp$_6 = document.getElementById('shininessInput'), HTMLInputElement) ? tmp$_6 : Kotlin.throwCCE();
-    this.shininess = this.shininessInput.valueAsNumber;
+    this.shininess$delegate = new WebGLWrapper$HTMLInputProperty(this.shininessInput);
     this.rotationSpeedInput = Kotlin.isType(tmp$_7 = document.getElementById('rotationSpeedInput'), HTMLInputElement) ? tmp$_7 : Kotlin.throwCCE();
-    this.rotationSpeed = this.rotationSpeedInput.valueAsNumber;
+    this.rotationSpeed$delegate = new WebGLWrapper$HTMLInputProperty(this.rotationSpeedInput);
     this.webgl.enable(WebGLRenderingContext.DEPTH_TEST);
-    this.scaleInput.oninput = WebGLWrapper_init$lambda(this);
-    this.lightPosXInput.oninput = WebGLWrapper_init$lambda_0(this);
-    this.lightPosYInput.oninput = WebGLWrapper_init$lambda_1(this);
-    this.lightPosZInput.oninput = WebGLWrapper_init$lambda_2(this);
-    this.shininessInput.oninput = WebGLWrapper_init$lambda_3(this);
-    this.rotationSpeedInput.oninput = WebGLWrapper_init$lambda_4(this);
+    this.lightPosXInput.oninput = WebGLWrapper_init$lambda(this);
+    this.lightPosYInput.oninput = WebGLWrapper_init$lambda_0(this);
+    this.lightPosZInput.oninput = WebGLWrapper_init$lambda_1(this);
     this.windowWidth = 800;
     this.windowHeight = 600;
     this.vertexShaderLocation_0 = 'vertex-shader.glsl';
@@ -46,6 +44,33 @@ var WebGL = function (_, Kotlin) {
     this.objFileLoader$delegate = lazy(WebGLWrapper$objFileLoader$lambda(this));
     this.rotation = 0.0;
   }
+  function WebGLWrapper$HTMLInputProperty(input) {
+    this.input = input;
+  }
+  WebGLWrapper$HTMLInputProperty.prototype.getValue_dsk1ci$ = function (thisRef, property) {
+    return this.input.valueAsNumber;
+  };
+  WebGLWrapper$HTMLInputProperty.$metadata$ = {
+    type: Kotlin.TYPE.CLASS,
+    classIndex: Kotlin.newClassIndex(),
+    simpleName: 'HTMLInputProperty',
+    baseClasses: [ReadOnlyProperty]
+  };
+  Object.defineProperty(WebGLWrapper.prototype, 'scaleFactor', {
+    get: function () {
+      return this.scaleFactor$delegate.getValue_dsk1ci$(this, new Kotlin.PropertyMetadata('scaleFactor'));
+    }
+  });
+  Object.defineProperty(WebGLWrapper.prototype, 'shininess', {
+    get: function () {
+      return this.shininess$delegate.getValue_dsk1ci$(this, new Kotlin.PropertyMetadata('shininess'));
+    }
+  });
+  Object.defineProperty(WebGLWrapper.prototype, 'rotationSpeed', {
+    get: function () {
+      return this.rotationSpeed$delegate.getValue_dsk1ci$(this, new Kotlin.PropertyMetadata('rotationSpeed'));
+    }
+  });
   Object.defineProperty(WebGLWrapper.prototype, 'objFileLoader', {
     get: function () {
       var $receiver = this.objFileLoader$delegate;
@@ -168,37 +193,19 @@ var WebGL = function (_, Kotlin) {
   };
   function WebGLWrapper_init$lambda(this$WebGLWrapper) {
     return function (it) {
-      this$WebGLWrapper.scaleFactor = this$WebGLWrapper.scaleInput.valueAsNumber;
+      this$WebGLWrapper.lightPos[0] = this$WebGLWrapper.lightPosXInput.valueAsNumber;
       return null;
     };
   }
   function WebGLWrapper_init$lambda_0(this$WebGLWrapper) {
     return function (it) {
-      this$WebGLWrapper.lightPos[0] = this$WebGLWrapper.lightPosXInput.valueAsNumber;
+      this$WebGLWrapper.lightPos[1] = this$WebGLWrapper.lightPosYInput.valueAsNumber;
       return null;
     };
   }
   function WebGLWrapper_init$lambda_1(this$WebGLWrapper) {
     return function (it) {
-      this$WebGLWrapper.lightPos[1] = this$WebGLWrapper.lightPosYInput.valueAsNumber;
-      return null;
-    };
-  }
-  function WebGLWrapper_init$lambda_2(this$WebGLWrapper) {
-    return function (it) {
       this$WebGLWrapper.lightPos[2] = this$WebGLWrapper.lightPosZInput.valueAsNumber;
-      return null;
-    };
-  }
-  function WebGLWrapper_init$lambda_3(this$WebGLWrapper) {
-    return function (it) {
-      this$WebGLWrapper.shininess = this$WebGLWrapper.shininessInput.valueAsNumber;
-      return null;
-    };
-  }
-  function WebGLWrapper_init$lambda_4(this$WebGLWrapper) {
-    return function (it) {
-      this$WebGLWrapper.rotationSpeed = this$WebGLWrapper.rotationSpeedInput.valueAsNumber;
       return null;
     };
   }

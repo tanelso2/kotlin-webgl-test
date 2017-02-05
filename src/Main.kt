@@ -9,6 +9,9 @@ import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.HTMLInputElement
 import kotlin.browser.document
 import kotlin.browser.window
+import kotlin.properties.Delegates
+import kotlin.properties.ReadOnlyProperty
+import kotlin.reflect.KProperty
 import org.khronos.webgl.WebGLRenderingContext as GL
 
 class WebGLWrapper {
@@ -16,8 +19,12 @@ class WebGLWrapper {
     val webgl: GL = canvas.getContext("webgl") as GL
     val shaderProgram: WebGLProgram = webgl.createProgram() ?: throw IllegalStateException("Could not initialize shader program")
 
+    private class HTMLInputProperty(val input: HTMLInputElement): ReadOnlyProperty<WebGLWrapper, Double> {
+        override fun getValue(thisRef: WebGLWrapper, property: KProperty<*>): Double = input.valueAsNumber
+    }
+
     val scaleInput = document.getElementById("scaleInput") as HTMLInputElement
-    var scaleFactor = scaleInput.valueAsNumber
+    val scaleFactor by HTMLInputProperty(scaleInput)
 
     val lightPosXInput = document.getElementById("lightPosX") as HTMLInputElement
     val lightPosYInput = document.getElementById("lightPosY") as HTMLInputElement
@@ -29,19 +36,16 @@ class WebGLWrapper {
     )
 
     val shininessInput = document.getElementById("shininessInput") as HTMLInputElement
-    var shininess = shininessInput.valueAsNumber
+    val shininess by HTMLInputProperty(shininessInput)
 
     val rotationSpeedInput = document.getElementById("rotationSpeedInput") as HTMLInputElement
-    var rotationSpeed = rotationSpeedInput.valueAsNumber
+    val rotationSpeed by HTMLInputProperty(rotationSpeedInput)
 
     init {
         webgl.enable(GL.DEPTH_TEST)
-        scaleInput.oninput = { scaleFactor = scaleInput.valueAsNumber; null }
         lightPosXInput.oninput = { lightPos[0] = lightPosXInput.valueAsNumber.toFloat(); null }
         lightPosYInput.oninput = { lightPos[1] = lightPosYInput.valueAsNumber.toFloat(); null }
         lightPosZInput.oninput = { lightPos[2] = lightPosZInput.valueAsNumber.toFloat(); null }
-        shininessInput.oninput = { shininess = shininessInput.valueAsNumber; null}
-        rotationSpeedInput.oninput = { rotationSpeed = rotationSpeedInput.valueAsNumber; null}
     }
 
     val windowWidth = 800
