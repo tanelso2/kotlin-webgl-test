@@ -6,12 +6,9 @@ import org.khronos.webgl.Float32Array
 import org.khronos.webgl.WebGLProgram
 import org.khronos.webgl.WebGLShader
 import org.w3c.dom.HTMLCanvasElement
-import org.w3c.dom.HTMLInputElement
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlin.math.PI
-import kotlin.properties.ReadOnlyProperty
-import kotlin.reflect.KProperty
 import org.khronos.webgl.WebGLRenderingContext as GL
 
 class WebGLWrapper {
@@ -19,27 +16,12 @@ class WebGLWrapper {
     val webgl: GL = canvas.getContext("webgl") as GL
     val shaderProgram: WebGLProgram = webgl.createProgram() ?: throw IllegalStateException("Could not initialize shader program")
 
-
-    private fun getInputElem(s: String): HTMLInputElement = document.getElementById(s) as HTMLInputElement
-
-    private class HTMLInputProperty(val input: HTMLInputElement): ReadOnlyProperty<WebGLWrapper, Double> {
-        override fun getValue(thisRef: WebGLWrapper, property: KProperty<*>): Double = input.valueAsNumber
-    }
-
-    private fun HTMLInputProperty(s: String): HTMLInputProperty {
-      val elem = getInputElem(s)
-      return HTMLInputProperty(elem)
-    }
-
     val scaleFactor by HTMLInputProperty("scaleInput")
 
-    val lightPosXInput = getInputElem("lightPosX")
-    val lightPosYInput = getInputElem("lightPosY")
-    val lightPosZInput = getInputElem("lightPosZ")
-    val lightPos = arrayOf(
-            lightPosXInput.valueAsNumber.toFloat(),
-            lightPosYInput.valueAsNumber.toFloat(),
-            lightPosZInput.valueAsNumber.toFloat()
+    val lightPos: Array<Float> by ArrayOfInputsProperty(
+        "lightPosX",
+        "lightPosY",
+        "lightPosZ"
     )
 
     val shininess by HTMLInputProperty("shininessInput")
@@ -48,9 +30,6 @@ class WebGLWrapper {
 
     init {
         webgl.enable(GL.DEPTH_TEST)
-        lightPosXInput.oninput = { lightPos[0] = lightPosXInput.valueAsNumber.toFloat(); null }
-        lightPosYInput.oninput = { lightPos[1] = lightPosYInput.valueAsNumber.toFloat(); null }
-        lightPosZInput.oninput = { lightPos[2] = lightPosZInput.valueAsNumber.toFloat(); null }
     }
 
     val windowWidth = 800
@@ -200,7 +179,7 @@ class WebGLWrapper {
 
 fun main() {
     document.body?.onload = {
-        val html = WebGLWrapper()
-        window.requestAnimationFrame { html.setup() }
+        val wrapper = WebGLWrapper()
+        window.requestAnimationFrame { wrapper.setup() }
     }
 }
