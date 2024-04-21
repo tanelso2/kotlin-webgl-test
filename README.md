@@ -1,7 +1,7 @@
 # kotlin-webgl-test
 Trying to relearn WebGL while also learning Kotlin.js
 
-Live demo of the current code can be found at https://thomasnelson.me/webgl/kotlin-webgl-test/
+Live demo of the current code can be found at https://tanelso2.github.io/kotlin-webgl-test
 
 # Building
 
