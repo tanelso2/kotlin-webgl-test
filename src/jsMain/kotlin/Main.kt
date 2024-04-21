@@ -19,27 +19,32 @@ class WebGLWrapper {
     val webgl: GL = canvas.getContext("webgl") as GL
     val shaderProgram: WebGLProgram = webgl.createProgram() ?: throw IllegalStateException("Could not initialize shader program")
 
+
+    private fun getInputElem(s: String): HTMLInputElement = document.getElementById(s) as HTMLInputElement
+
     private class HTMLInputProperty(val input: HTMLInputElement): ReadOnlyProperty<WebGLWrapper, Double> {
         override fun getValue(thisRef: WebGLWrapper, property: KProperty<*>): Double = input.valueAsNumber
     }
 
-    val scaleInput = document.getElementById("scaleInput") as HTMLInputElement
-    val scaleFactor by HTMLInputProperty(scaleInput)
+    private fun HTMLInputProperty(s: String): HTMLInputProperty {
+      val elem = getInputElem(s)
+      return HTMLInputProperty(elem)
+    }
 
-    val lightPosXInput = document.getElementById("lightPosX") as HTMLInputElement
-    val lightPosYInput = document.getElementById("lightPosY") as HTMLInputElement
-    val lightPosZInput = document.getElementById("lightPosZ") as HTMLInputElement
+    val scaleFactor by HTMLInputProperty("scaleInput")
+
+    val lightPosXInput = getInputElem("lightPosX")
+    val lightPosYInput = getInputElem("lightPosY")
+    val lightPosZInput = getInputElem("lightPosZ")
     val lightPos = arrayOf(
             lightPosXInput.valueAsNumber.toFloat(),
             lightPosYInput.valueAsNumber.toFloat(),
             lightPosZInput.valueAsNumber.toFloat()
     )
 
-    val shininessInput = document.getElementById("shininessInput") as HTMLInputElement
-    val shininess by HTMLInputProperty(shininessInput)
+    val shininess by HTMLInputProperty("shininessInput")
 
-    val rotationSpeedInput = document.getElementById("rotationSpeedInput") as HTMLInputElement
-    val rotationSpeed by HTMLInputProperty(rotationSpeedInput)
+    val rotationSpeed by HTMLInputProperty("rotationSpeedInput")
 
     init {
         webgl.enable(GL.DEPTH_TEST)
@@ -147,6 +152,7 @@ class WebGLWrapper {
     }
 
     var rotation = 0.0
+
     fun draw() {
         setupUniformVec3Float(lightPos, "uLightPos")
 
