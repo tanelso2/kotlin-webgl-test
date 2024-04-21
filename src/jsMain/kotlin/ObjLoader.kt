@@ -1,6 +1,8 @@
 import com.tanelso2.glmatrix.Vec3
 import org.khronos.webgl.Float32Array
 import org.khronos.webgl.Uint16Array
+import org.khronos.webgl.get
+import kotlin.random.Random
 
 class ObjLoader(source: String) {
     private val points = ArrayList<Point>()
@@ -9,20 +11,23 @@ class ObjLoader(source: String) {
     init {
         val lines = source.split('\n')
         lines.forEach { line ->
-            val values = line.split(' ').filter { it != "" }
+            val values = line.split(' ').filter { it != "" }.map { it.trim() }
             when(values.getOrNull(0)) {
                 "v" -> points.add(Point(
-                        safeParseDouble(values[1])!!,
-                        safeParseDouble(values[2])!!,
-                        safeParseDouble(values[3])!!))
+                        values[1].toDouble(),
+                        values[2].toDouble(),
+                        values[3].toDouble()
+                ))
                 "f" -> faces.add(Face(
-                        safeParseInt(values[1])!! - 1,
-                        safeParseInt(values[2])!! - 1,
-                        safeParseInt(values[3])!! - 1))
+                    values[1].toInt() - 1,
+                    values[2].toInt() - 1,
+                    values[3].toInt() - 1
+                ))
                 "vn" -> normals.add(Vec3(
-                        safeParseDouble(values[1])!!,
-                        safeParseDouble(values[2])!!,
-                        safeParseDouble(values[3])!!))
+                        values[1].toDouble(),
+                        values[2].toDouble(),
+                        values[3].toDouble()
+                ))
             }
         }
         if (normals.isEmpty()) {
@@ -105,9 +110,9 @@ class ObjLoader(source: String) {
 
             companion object {
                 fun randomColor() = Color(
-                        Math.random(),
-                        Math.random(),
-                        Math.random(),
+                        Random.nextFloat(),
+                        Random.nextFloat(),
+                        Random.nextFloat(),
                         1.0
                 )
             }

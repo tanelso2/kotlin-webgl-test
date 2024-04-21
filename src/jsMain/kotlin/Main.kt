@@ -7,9 +7,9 @@ import org.khronos.webgl.WebGLProgram
 import org.khronos.webgl.WebGLShader
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.HTMLInputElement
-import kotlin.browser.document
-import kotlin.browser.window
-import kotlin.properties.Delegates
+import kotlinx.browser.document
+import kotlinx.browser.window
+import kotlin.math.PI
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 import org.khronos.webgl.WebGLRenderingContext as GL
@@ -154,7 +154,7 @@ class WebGLWrapper {
         webgl.uniform1f(shininessUniform, shininess.toFloat())
 
         val pMatrix = Mat4()
-        pMatrix.perspective(Math.PI / 3, 16.0 / 9.0, 0.1, 60.0)
+        pMatrix.perspective(PI / 3, 16.0 / 9.0, 0.1, 60.0)
 
         val vMatrix = Mat4()
         vMatrix.lookAt(Vec3(20,20,20), Vec3(0,0,0), Vec3(0,0,1))
@@ -162,7 +162,7 @@ class WebGLWrapper {
         val mMatrix = Mat4()
         mMatrix.scale(scaleFactor)
         rotation += rotationSpeed
-        mMatrix.rotateX(Math.PI / 2)
+        mMatrix.rotateX(PI / 2)
         mMatrix.rotateY(rotation)
 
         val nMatrix = Mat3.fromMat4(vMatrix * mMatrix)
@@ -192,7 +192,7 @@ class WebGLWrapper {
     }
 }
 
-fun main(args: Array<String>) {
+fun main() {
     document.body?.onload = {
         val html = WebGLWrapper()
         window.requestAnimationFrame { html.setup() }

@@ -1,4 +1,4 @@
-import kotlin.browser.window
+import kotlinx.browser.window
 
 class ResourceLoader(vararg resourceLocations: String) {
     private class ResourceInfo {
@@ -22,7 +22,7 @@ class ResourceLoader(vararg resourceLocations: String) {
                 .then {response -> response.text()}
                 .then {text ->
                     resourceMap[uri]?.loaded = true
-                    resourceMap[uri]?.value = text as String
+                    resourceMap[uri]?.value = text
                     return@then null //to please the compiler
                 }
                 .catch {e ->
