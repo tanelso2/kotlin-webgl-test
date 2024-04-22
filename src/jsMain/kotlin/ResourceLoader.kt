@@ -10,7 +10,7 @@ class ResourceLoader(vararg resourceLocations: String) {
     private val fetchParams = RequestInit(method = "GET", cache = RequestCache.NO_STORE, mode = RequestMode.SAME_ORIGIN)
     init {
         for (loc in resourceLocations) {
-            resourceMap.put(loc, ResourceInfo())
+            resourceMap[loc] = ResourceInfo()
             makeRequest(loc)
         }
     }

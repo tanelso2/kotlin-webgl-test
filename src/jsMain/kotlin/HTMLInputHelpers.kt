@@ -6,11 +6,11 @@ import kotlin.reflect.KProperty
 fun getInputElem(s: String): HTMLInputElement =
     document.getElementById(s) as HTMLInputElement
 
-class HTMLInputProperty<T>(private val input: HTMLInputElement): ReadOnlyProperty<T, Double> {
-    override fun getValue(thisRef: T, property: KProperty<*>): Double = input.valueAsNumber
+class HTMLInputProperty(private val input: HTMLInputElement): ReadOnlyProperty<Any?, Double> {
+    override fun getValue(thisRef: Any?, property: KProperty<*>): Double = input.valueAsNumber
 }
 
-fun <T> HTMLInputProperty(s: String): HTMLInputProperty<T> {
+fun HTMLInputProperty(s: String): HTMLInputProperty {
     val elem = getInputElem(s)
     return HTMLInputProperty(elem)
 }
