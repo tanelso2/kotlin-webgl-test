@@ -138,11 +138,9 @@ class WebGLWrapper {
         val shininessUniform = webgl.getUniformLocation(shaderProgram, "shininess")
         webgl.uniform1f(shininessUniform, shininess.toFloat())
 
-        val pMatrix = Mat4()
-        pMatrix.perspective(PI / 3, 16.0 / 9.0, 0.1, 60.0)
+        val pMatrix = Mat4.perspective(PI / 3, 16.0 / 9.0, 0.1, 60.0)
 
-        val vMatrix = Mat4()
-        vMatrix.lookAt(Vec3(20,20,20), Vec3(0,0,0), Vec3(0,0,1))
+        val vMatrix = Mat4.lookAt(Vec3(20,20,20), Vec3(0,0,0), Vec3(0,0,1))
 
         val mMatrix = Mat4()
         mMatrix.scale(scaleFactor)

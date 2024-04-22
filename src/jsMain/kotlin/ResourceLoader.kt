@@ -1,4 +1,5 @@
 import kotlinx.browser.window
+import org.w3c.fetch.*
 
 class ResourceLoader(vararg resourceLocations: String) {
     private class ResourceInfo {
@@ -6,11 +7,8 @@ class ResourceLoader(vararg resourceLocations: String) {
         var value: String? = null
     }
     private val resourceMap: MutableMap<String, ResourceInfo> = HashMap()
-    private var fetchParams = js("({})")
+    private val fetchParams = RequestInit(method = "GET", cache = RequestCache.NO_STORE, mode = RequestMode.SAME_ORIGIN)
     init {
-        fetchParams.method = "GET"
-        fetchParams.cache = "no-store"
-        fetchParams.mode = "same-origin"
         for (loc in resourceLocations) {
             resourceMap.put(loc, ResourceInfo())
             makeRequest(loc)

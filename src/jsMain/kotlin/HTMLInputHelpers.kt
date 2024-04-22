@@ -21,7 +21,7 @@ class ArrayOfInputsProperty(private val inputs: Array<HTMLInputElement>): ReadOn
         inputs.mapIndexed { i,input ->
             input.oninput =  {
                 cache[i] = input.valueAsNumber.toFloat()
-                null
+                null // Function is required to return a js value
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.tanelso2.glmatrix
 
 import org.khronos.webgl.Float32Array
+import org.khronos.webgl.get
 
 typealias Vec3JS = Float32Array
 
@@ -26,6 +27,10 @@ class Vec3(val array: Vec3JS) {
         val ret = Vec3()
         vec3.add(ret.array, this.array, other.array)
         return ret
+    }
+
+    fun list(): List<Float> {
+        return listOf(array[0], array[1], array[2])
     }
 }
 

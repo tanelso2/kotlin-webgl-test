@@ -1,7 +1,6 @@
 import com.tanelso2.glmatrix.Vec3
 import org.khronos.webgl.Float32Array
 import org.khronos.webgl.Uint16Array
-import org.khronos.webgl.get
 import kotlin.random.Random
 
 class ObjLoader(source: String) {
@@ -75,7 +74,7 @@ class ObjLoader(source: String) {
     }
 
     fun getVertexNormals(): Float32Array {
-        val floatList = normals.flatMap { listOf(it.array[0], it.array[1], it.array[2]) }
+        val floatList = normals.flatMap { it.list() }
         return Float32Array(floatList.toTypedArray())
     }
 

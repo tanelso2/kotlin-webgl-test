@@ -7,6 +7,19 @@ typealias Mat4JS = Float32Array
 class Mat4(val array: Mat4JS) {
     constructor() : this(Float32Array(mat4.create()))
     constructor(a: Array<Float>) : this(Float32Array(a))
+    companion object {
+        fun lookAt(eye: Vec3, center: Vec3, up: Vec3): Mat4 {
+            val ret = Mat4()
+            ret.lookAt(eye, center, up)
+            return ret
+        }
+
+        fun perspective(fovy: Number, aspect: Number, near: Number, far: Number): Mat4 {
+            val ret = Mat4()
+            ret.perspective(fovy, aspect, near, far)
+            return ret
+        }
+    }
 
     fun clone(): Mat4 = Mat4(array)
     fun identity() {
