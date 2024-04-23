@@ -113,6 +113,7 @@ class TeapotObj(private val webgl: GL, private val objLoader: ObjLoader, private
         nMatrix.invert()
         shaderProgram.setupUniformMat3("uNMatrix", nMatrix)
 
+        val faceIndexBuffer = webgl.createBuffer()
         webgl.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, faceIndexBuffer)
         webgl.bufferData(GL.ELEMENT_ARRAY_BUFFER, faces, GL.STATIC_DRAW)
 
@@ -201,7 +202,6 @@ class Main {
         rotation += rotationSpeed
         lightSource?.pos = lightPos
         teapot.draw(scaleFactor, rotation, shininess, lightSource!!)
-        webgl.flush()
     }
 
     fun render() {
