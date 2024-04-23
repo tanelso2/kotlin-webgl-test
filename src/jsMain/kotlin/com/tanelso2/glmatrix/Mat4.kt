@@ -64,6 +64,20 @@ class Mat4(val array: Mat4JS) {
 
     operator fun times(other: Mat4): Mat4 = multiply(other)
 
+    companion object {
+        fun lookAt(eye: Vec3, center: Vec3, up: Vec3): Mat4 {
+            val ret = Mat4()
+            ret.lookAt(eye, center, up)
+            return ret
+        }
+
+        fun perspective(fovy: Double, aspect: Double, near: Double, far: Double): Mat4 {
+            val ret = Mat4()
+            ret.perspective(fovy, aspect, near, far)
+            return ret
+        }
+    }
+
 }
 
 external open class mat4 {

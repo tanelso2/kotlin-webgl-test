@@ -5,6 +5,8 @@ import org.khronos.webgl.Float32Array
 typealias Vec3JS = Float32Array
 
 class Vec3(val array: Vec3JS) {
+    constructor(vals: Array<Float>):
+            this(Float32Array(vals))
     constructor(x: Number, y: Number, z: Number):
             this(vec3.fromValues(x.toFloat(), y.toFloat(), z.toFloat()))
     constructor():
